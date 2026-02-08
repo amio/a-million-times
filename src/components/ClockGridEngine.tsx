@@ -145,14 +145,14 @@ const SCENES: Scene[] = [
   {
     pattern: timePatternFactory,
     duration: scaleMs(4000),
-    hold: scaleMs(10000),
+    hold: scaleMs(4000),
     easing: easeInOutCubic,
     stagger: stagger.radial,
   },
   {
     pattern: wavePatternFactory,
     duration: scaleMs(3000),
-    hold: scaleMs(8000),
+    hold: scaleMs(2500),
     easing: easeInOutQuad,
     stagger: stagger.leftToRight,
     continuous: true,
@@ -161,7 +161,7 @@ const SCENES: Scene[] = [
   {
     pattern: vortexPatternFactory,
     duration: scaleMs(4000),
-    hold: scaleMs(8000),
+    hold: scaleMs(2500),
     easing: easeInOutCubic,
     stagger: stagger.radial,
     continuous: true,
@@ -170,14 +170,14 @@ const SCENES: Scene[] = [
   {
     pattern: uniformPatternFactory(0),
     duration: scaleMs(2000),
-    hold: scaleMs(4000),
+    hold: scaleMs(1200),
     easing: easeOutBack,
     stagger: stagger.diagonal,
   },
   {
     pattern: randomPatternFactory(42),
     duration: scaleMs(3000),
-    hold: scaleMs(4000),
+    hold: scaleMs(1200),
     easing: easeInOutCubic,
     stagger: stagger.random,
   },
