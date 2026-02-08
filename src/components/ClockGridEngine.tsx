@@ -1,10 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 import { ClockGridView, type ClockState, type GridState } from './ClockGridView'
+import { GLYPHS } from './glyphs'
 
 const ROWS = 8
-const COLS = 15
+const COLS = 18
 // Full rotation in "pi units" where 2 == 2π radians.
 const TAU = 2
+const SPEED = 0.4
+const scaleMs = (ms: number) => Math.round(ms / SPEED)
 
 type PatternFn = (row: number, col: number) => ClockState
 
@@ -34,14 +37,7 @@ interface RuntimeState {
   staggerMax: number
 }
 
-const U = 0
-const R = 0.5
-const D = 1
-const L = 1.5
-
-const H: ClockState = [R, L]
-const V: ClockState = [U, D]
-const O: ClockState = [U, U]
+const NE: ClockState = [0.25, 0.25]
 
 const easeInOutCubic: EasingFn = (t) =>
   t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2
@@ -68,63 +64,53 @@ const stagger = {
     pseudoRandom(row * COLS + col) * 500,
 }
 
-const makeGlyph = (rows: string[]): ClockState[][] =>
-  rows.map((row) =>
-    row.split('').map((cell) => {
-      if (cell === 'H') return H
-      if (cell === 'V') return V
-      return O
-    })
-  )
+type GlyphDefinition = (typeof GLYPHS)[keyof typeof GLYPHS]
 
-const DIGIT_GLYPHS: Record<number, ClockState[][]> = {
-  0: makeGlyph(['HHH', 'V.V', '...', 'V.V', 'HHH']),
-  1: makeGlyph(['..V', '..V', '..V', '..V', '..V']),
-  2: makeGlyph(['HHH', '..V', 'HHH', 'V..', 'HHH']),
-  3: makeGlyph(['HHH', '..V', 'HHH', '..V', 'HHH']),
-  4: makeGlyph(['...', 'V.V', 'HHH', '..V', '..V']),
-  5: makeGlyph(['HHH', 'V..', 'HHH', '..V', 'HHH']),
-  6: makeGlyph(['HHH', 'V..', 'HHH', 'V.V', 'HHH']),
-  7: makeGlyph(['HHH', '..V', '..V', '..V', '..V']),
-  8: makeGlyph(['HHH', 'V.V', 'HHH', 'V.V', 'HHH']),
-  9: makeGlyph(['HHH', 'V.V', 'HHH', '..V', 'HHH']),
+const toGrid = (glyph: GlyphDefinition): ClockState[][] => {
+  const rows: ClockState[][] = []
+  for (let r = 0; r < glyph.rows; r += 1) {
+    const start = r * glyph.cols
+    rows.push(glyph.clocks.slice(start, start + glyph.cols))
+  }
+  return rows
 }
 
 const timePatternFactory: PatternFactory = (time) => {
   const date = new Date(time.wallTime)
   const hours = date.getHours()
   const minutes = date.getMinutes()
-  const digits = [
-    Math.floor(hours / 10),
-    hours % 10,
-    Math.floor(minutes / 10),
-    minutes % 10,
+  const glyphs = [
+    toGrid(GLYPHS[String(Math.floor(hours / 10))]),
+    toGrid(GLYPHS[String(hours % 10)]),
+    toGrid(GLYPHS[':']),
+    toGrid(GLYPHS[String(Math.floor(minutes / 10))]),
+    toGrid(GLYPHS[String(minutes % 10)]),
   ]
-  const glyphs = digits.map((digit) => DIGIT_GLYPHS[digit])
-  const startRow = Math.floor((ROWS - 5) / 2)
-  const digitWidth = 3
-  const gap = 1
-  const totalWidth = digitWidth * 4 + gap
+  const glyphHeight = glyphs[0]?.length ?? 0
+  const startRow = Math.floor((ROWS - glyphHeight) / 2)
+  const glyphWidths = glyphs.map((glyph) => glyph[0]?.length ?? 0)
+  const totalWidth = glyphWidths.reduce((sum, width) => sum + width, 0)
   const startCol = Math.floor((COLS - totalWidth) / 2)
 
   return (row, col) => {
-    if (row < startRow || row >= startRow + 5) return O
+    if (row < startRow || row >= startRow + glyphHeight) return NE
     const localCol = col - startCol
-    if (localCol < 0 || localCol >= totalWidth) return O
-    if (localCol >= digitWidth * 2 && localCol < digitWidth * 2 + gap) {
-      return O
+    if (localCol < 0 || localCol >= totalWidth) return NE
+    let offset = 0
+    for (let i = 0; i < glyphs.length; i += 1) {
+      const width = glyphWidths[i] ?? 0
+      if (localCol >= offset && localCol < offset + width) {
+        const glyph = glyphs[i]
+        return glyph?.[row - startRow]?.[localCol - offset] ?? NE
+      }
+      offset += width
     }
-    const adjustedCol =
-      localCol > digitWidth * 2 ? localCol - gap : localCol
-    const digitIndex = Math.floor(adjustedCol / digitWidth)
-    if (digitIndex < 0 || digitIndex > 3) return O
-    const glyph = glyphs[digitIndex]
-    return glyph[row - startRow][adjustedCol % digitWidth]
+    return NE
   }
 }
 
 const wavePatternFactory: PatternFactory = (time) => {
-  const phase = (time.now * 0.001) % TAU
+  const phase = (time.now * 0.0005 * SPEED) % TAU
   return (row, col) => {
     const angle = ((col + row * 0.3) / COLS) * TAU + phase
     return [angle, angle + 1]
@@ -132,7 +118,7 @@ const wavePatternFactory: PatternFactory = (time) => {
 }
 
 const vortexPatternFactory: PatternFactory = (time) => {
-  const phase = (time.now * 0.0009) % TAU
+  const phase = (time.now * 0.00045 * SPEED) % TAU
   const cx = (COLS - 1) / 2
   const cy = (ROWS - 1) / 2
   return (row, col) => {
@@ -158,15 +144,15 @@ const randomPatternFactory = (seed: number): PatternFactory =>
 const SCENES: Scene[] = [
   {
     pattern: timePatternFactory,
-    duration: 2000,
-    hold: 5000,
+    duration: scaleMs(4000),
+    hold: scaleMs(10000),
     easing: easeInOutCubic,
     stagger: stagger.radial,
   },
   {
     pattern: wavePatternFactory,
-    duration: 1500,
-    hold: 4000,
+    duration: scaleMs(3000),
+    hold: scaleMs(8000),
     easing: easeInOutQuad,
     stagger: stagger.leftToRight,
     continuous: true,
@@ -174,8 +160,8 @@ const SCENES: Scene[] = [
   },
   {
     pattern: vortexPatternFactory,
-    duration: 2000,
-    hold: 4000,
+    duration: scaleMs(4000),
+    hold: scaleMs(8000),
     easing: easeInOutCubic,
     stagger: stagger.radial,
     continuous: true,
@@ -183,15 +169,15 @@ const SCENES: Scene[] = [
   },
   {
     pattern: uniformPatternFactory(0),
-    duration: 1000,
-    hold: 2000,
+    duration: scaleMs(2000),
+    hold: scaleMs(4000),
     easing: easeOutBack,
     stagger: stagger.diagonal,
   },
   {
     pattern: randomPatternFactory(42),
-    duration: 1500,
-    hold: 2000,
+    duration: scaleMs(3000),
+    hold: scaleMs(4000),
     easing: easeInOutCubic,
     stagger: stagger.random,
   },
@@ -251,6 +237,7 @@ class SequenceEngine {
   private state: RuntimeState | null = null
   private current: GridState | null = null
   private lastTime = 0
+  private lastMinute = -1
 
   constructor(scenes: Scene[]) {
     this.scenes = scenes
@@ -270,22 +257,43 @@ class SequenceEngine {
     index: number,
     now: number,
     wallTime: number,
-    from: GridState
+    from: GridState,
+    startTimeOverride?: number
   ) {
     const scene = this.scenes[index]
     const target = buildGrid(scene.pattern({ now, wallTime }))
+    const startTime =
+      startTimeOverride === undefined ? now : startTimeOverride
     this.sceneIndex = index
-    this.sceneStart = now
+    this.sceneStart = startTime
     this.state = {
       from,
       to: target,
-      startTime: now,
+      startTime,
       duration: scene.duration,
       easing: scene.easing,
       stagger: scene.stagger,
       staggerMax: this.computeStaggerMax(scene.stagger),
     }
     this.current = from
+  }
+
+  private snapToTimeScene(now: number, wallTime: number, from: GridState) {
+    const scene = this.scenes[0]
+    const target = buildGrid(scene.pattern({ now, wallTime }))
+    const staggerMax = this.computeStaggerMax(scene.stagger)
+    this.sceneIndex = 0
+    this.sceneStart = now - (staggerMax + scene.duration)
+    this.state = {
+      from: target,
+      to: target,
+      startTime: this.sceneStart,
+      duration: scene.duration,
+      easing: scene.easing,
+      stagger: scene.stagger,
+      staggerMax,
+    }
+    this.current = target
   }
 
   compute(now: number): GridState {
@@ -295,7 +303,18 @@ class SequenceEngine {
       const initialGrid = buildGrid(initialPattern)
       this.enterScene(0, now, wallTime, initialGrid)
       this.lastTime = now
+      this.lastMinute = Math.floor(wallTime / 60000)
       return initialGrid
+    }
+
+    const minuteMs = 60000
+    const minuteStamp = Math.floor(wallTime / minuteMs)
+    const msToNextMinute = minuteMs - (wallTime % minuteMs)
+    if (minuteStamp !== this.lastMinute) {
+      this.lastMinute = minuteStamp
+      if (this.sceneIndex === 0) {
+        this.snapToTimeScene(now, wallTime, this.current)
+      }
     }
 
     const scene = this.scenes[this.sceneIndex]
@@ -303,6 +322,11 @@ class SequenceEngine {
     const transitionEnd = this.state.staggerMax + this.state.duration
     const dt = this.lastTime ? now - this.lastTime : 0
     this.lastTime = now
+
+    if (this.sceneIndex !== 0 && msToNextMinute <= transitionEnd) {
+      const startTime = now - (transitionEnd - msToNextMinute)
+      this.enterScene(0, now, wallTime, this.current, startTime)
+    }
 
     let current: GridState
     if (elapsed < transitionEnd) {

@@ -21,11 +21,11 @@
 }
 
 .clock-grid {
-  --clock-size: clamp(22px, 4vw, 58px);
+    --clock-size: clamp(20px, 4.5vw, 7vh);
   display: grid;
-  grid-template-columns: repeat(15, var(--clock-size));
+  grid-template-columns: repeat(18, var(--clock-size));
   grid-auto-rows: var(--clock-size);
-  gap: clamp(4px, 0.9vw, 10px);
+  gap: clamp(1px, 0.3vw, 6px);
   padding: clamp(24px, 5vw, 48px);
   border-radius: clamp(8px, 1vw, 16px);
   background: rgba(12, 12, 16, 0.7);
@@ -48,7 +48,7 @@
   fill: none;
   stroke: var(--ring);
   stroke-width: 1.4;
-  opacity: 0.6;
+  opacity: 0.25;
 }
 
 .clock-hand {

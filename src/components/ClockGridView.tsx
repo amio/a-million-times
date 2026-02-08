@@ -23,20 +23,20 @@ type ClockAngles = {
  */
 const SVGClock = ({a, b}: ClockAngles) => (
   <svg className="clock-face" viewBox="-50 -50 100 100" aria-hidden="true">
-    <circle className="clock-ring" r={45} />
+    <circle className="clock-ring" r={48} />
     <line
       className="clock-hand"
       x1={0}
       y1={0}
-      x2={Math.sin(a * Math.PI) * 30}
-      y2={-Math.cos(a * Math.PI) * 30}
+      x2={Math.sin(a * Math.PI) * 36}
+      y2={-Math.cos(a * Math.PI) * 36}
     />
     <line
       className="clock-hand"
       x1={0}
       y1={0}
-      x2={Math.sin(b * Math.PI) * 36}
-      y2={-Math.cos(b * Math.PI) * 36}
+      x2={Math.sin(b * Math.PI) * 46}
+      y2={-Math.cos(b * Math.PI) * 46}
     />
     <circle className="clock-core" r={3} />
   </svg>

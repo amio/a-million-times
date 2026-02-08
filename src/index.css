@@ -14,7 +14,7 @@
   --soft: #c9c6bc;
   --muted: #8f8b83;
   --hand: #f7f1e2;
-  --ring: rgba(247, 241, 226, 0.5);
+  --ring: #777;
   --mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
     'Liberation Mono', 'Courier New', monospace;
 }
