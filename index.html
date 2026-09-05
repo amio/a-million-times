@@ -1,0 +1,748 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f5f5f3">
+<meta name="description" content="A browser recreation of Humans since 1982’s A Million Times: synchronized clock hands forming patterns and telling time.">
+<title>A Million Times 144</title>
+<style>
+  :root { color-scheme:light; --paper:#f5f5f3; --ink:#252724; --muted:#757872; --line:#dedfda; }
+  * { box-sizing:border-box; }
+  [hidden] { display:none !important; }
+  body { margin:0; background:var(--paper); color:var(--ink); font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; overflow:hidden; }
+  button,input,select { font:inherit; color:inherit; }
+  button { cursor:pointer; }
+  button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible { outline:2px solid var(--ink); outline-offset:4px; }
+  main { position:fixed; inset:0; display:grid; place-items:center; }
+  canvas { display:block; outline:none; }
+  .top { position:fixed; inset:26px 32px auto; display:flex; align-items:center; justify-content:space-between; gap:20px; pointer-events:none; }
+  .signature { font-size:14px; font-weight:500; letter-spacing:.015em; }
+  .edition { color:var(--muted); font-weight:400; }
+  .top button,.bottom button { pointer-events:auto; }
+  .quiet { background:none; border:0; padding:8px 10px; color:var(--muted); border-radius:4px; }
+  .quiet:hover,.quiet[aria-expanded="true"] { color:var(--ink); background:#e9eae5; }
+  .bottom { position:fixed; inset:auto 32px 24px; display:flex; align-items:flex-end; justify-content:space-between; gap:24px; pointer-events:none; }
+  .bottom-left { display:flex; align-items:center; flex-wrap:wrap; gap:6px 24px; min-width:0; }
+  .current { display:flex; align-items:center; gap:12px; min-width:0; color:var(--muted); font-size:12px; }
+  #sequenceNumber { font-variant-numeric:tabular-nums; flex-shrink:0; }
+  #sceneName { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:190px; }
+  .track { width:54px; height:2px; background:var(--line); flex-shrink:0; }
+  #progress { display:block; height:100%; background:var(--muted); transform:scaleX(0); transform-origin:left; }
+  .transport { display:flex; align-items:center; gap:10px; }
+  .transport button { font-size:13px; }
+  #settings { flex-shrink:0; }
+  .panel { position:fixed; z-index:2; right:32px; width:340px; max-height:calc(100dvh - 154px); overflow:auto; overscroll-behavior:contain; padding:20px; background:rgba(250,250,248,.97); border:1px solid var(--line); border-radius:8px; box-shadow:0 12px 40px #00000008; }
+  .control-panel { bottom:78px; }
+  .about-panel { top:78px; }
+  .panel-header { display:flex; align-items:center; justify-content:space-between; margin:-6px -8px 16px 0; gap:16px; }
+  .panel-header h2 { margin:0; font-size:14px; font-weight:500; }
+  .about-panel p { color:var(--muted); margin:0 0 18px; line-height:1.65; }
+  .about-panel a { color:inherit; text-underline-offset:3px; }
+  .about-panel .source { color:var(--ink); }
+  .row { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:18px; }
+  label,.label { font-size:13px; color:var(--muted); }
+  select,input[type="text"] { background:transparent; border:1px solid var(--line); border-radius:4px; padding:7px 8px; min-width:0; }
+  select { max-width:190px; }
+  input[type="range"] { width:144px; accent-color:var(--ink); }
+  #speedValue { display:inline-block; min-width:36px; text-align:right; color:var(--ink); }
+  .divider { height:1px; background:var(--line); margin:20px 0; }
+  .text-form { display:flex; gap:8px; margin-top:9px; }
+  .text-form input { flex:1; width:160px; text-transform:uppercase; }
+  .solid { border:1px solid var(--ink); background:var(--ink); color:var(--paper); border-radius:4px; padding:7px 11px; }
+  .patterns { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin-top:10px; }
+  .patterns button { padding:8px 4px; font-size:12px; border:1px solid var(--line); background:transparent; border-radius:4px; }
+  .patterns button:hover,.patterns button[aria-pressed="true"] { border-color:var(--ink); }
+  #textError { color:#965039; min-height:18px; font-size:12px; margin-top:5px; }
+  @media(max-width:600px) {
+    .top { inset:18px 18px auto; } .bottom { inset:auto 18px 18px; gap:12px; }
+    .bottom-left { flex:1; flex-direction:column; align-items:flex-start; gap:4px; }
+    .current { width:100%; gap:7px; } #sceneName { max-width:none; }
+    .panel { right:18px; width:min(340px,calc(100vw - 36px)); max-height:calc(100dvh - 160px); }
+    .control-panel { bottom:96px; } .about-panel { top:70px; }
+    .transport { gap:0; margin-left:-10px; } .track { width:30px; }
+  }
+  @media(max-height:420px) { .top { top:10px; } .bottom { bottom:8px; } .panel { max-height:calc(100dvh - 116px); } .control-panel { bottom:60px; } .about-panel { top:53px; } }
+  @media(prefers-reduced-motion:reduce) { * { scroll-behavior:auto; } }
+</style>
+</head>
+<body>
+<main><canvas id="clock" role="img" tabindex="-1" aria-label="A kinetic clock made of 144 two-hand clocks"></canvas></main>
+<header class="top">
+  <strong class="signature">A Million Times <span class="edition">144</span></strong>
+  <button id="about" class="quiet" aria-expanded="false" aria-controls="aboutPanel">About</button>
+</header>
+<aside id="aboutPanel" class="panel about-panel" hidden aria-labelledby="aboutTitle">
+  <div class="panel-header"><h2 id="aboutTitle">A Million Times <span class="edition">144</span></h2><button id="closeAbout" class="quiet" aria-label="Close about">×</button></div>
+  <p>A tribute to <a href="https://www.humanssince1982.com/" target="_blank" rel="noreferrer">Humans since 1982</a>’s A Million Times, recreating its synchronized clock hands as they form abstract patterns and tell time.</p>
+  <a class="source" href="https://github.com/amio/a-million-times" target="_blank" rel="noreferrer">View source ↗</a>
+</aside>
+<aside id="panel" class="panel control-panel" hidden aria-labelledby="controlsTitle">
+  <div class="panel-header"><h2 id="controlsTitle">Controls</h2><button id="closeControls" class="quiet" aria-label="Close controls">×</button></div>
+  <div class="row"><label for="mode">Mode</label><select id="mode"><option value="exhibition">Exhibition · Continuous</option><option value="active">Active · Every minute</option><option value="original">Original · Radial</option><option value="minimal">Minimal · Time only</option></select></div>
+  <div class="row"><label for="choreography">Sequence</label><select id="choreography"></select></div>
+  <div class="row"><label for="speed">Speed <output id="speedValue">1×</output></label><input id="speed" type="range" min="0.25" max="3" value="1" step="0.25"></div>
+  <div class="row"><label for="format">Time format</label><select id="format"><option value="24">24-hour</option><option value="12">12-hour</option></select></div>
+  <div class="divider"></div>
+  <label for="text">Text</label>
+  <form id="textForm" class="text-form"><input id="text" type="text" maxlength="4" value="TIME" aria-describedby="textError" autocomplete="off" spellcheck="false"><button class="solid" type="submit">Show</button></form>
+  <div id="textError" role="status"></div>
+  <div class="label">Static patterns</div>
+  <div id="patterns" class="patterns"></div>
+</aside>
+<footer id="toolbar" class="bottom" hidden>
+  <div class="bottom-left">
+    <div class="current"><span id="sequenceNumber"></span><span class="track"><i id="progress"></i></span><span id="sceneName">Radial ripples</span></div>
+    <div class="transport"><button id="timeButton" class="quiet">Time</button><button id="pause" class="quiet" aria-label="Pause animation">Pause</button><button id="next" class="quiet" aria-label="Next sequence">Next ↗</button></div>
+  </div>
+  <button id="settings" class="quiet" aria-expanded="false" aria-controls="panel">Controls</button>
+</footer>
+<script>
+/*
+ * Independent study of Humans since 1982's motion language. No original software or
+ * assets are used. The 18 × 8 layout follows AMT144; choreography is independently authored.
+ * Pattern owns poses; Score owns unwrapped per-hand trajectories; Director owns
+ * sequencing. Rendering never changes hand geometry to manufacture a pattern.
+ */
+'use strict';
+const ClockCore = (() => {
+  const TAU = Math.PI * 2, PI = Math.PI, COLS = 18, ROWS = 8, COUNT = COLS * ROWS;
+  const PARK = PI * .75;
+  const clamp = (v,lo=0,hi=1) => Math.max(lo,Math.min(hi,v));
+  const mod = (x,n=TAU) => ((x%n)+n)%n;
+  const wrap = x => mod(x+PI)-PI;
+  const cells = Array.from({length:COUNT},(_,i) => {
+    const col=i%COLS,row=Math.floor(i/COLS),x=col-(COLS-1)/2,y=row-(ROWS-1)/2;
+    return {i,col,row,x,y,r:Math.hypot(x,y),phi:Math.atan2(y,x)};
+  });
+  const tiles = {
+    '/':[PARK,PARK], '-':[0,PI], '|':[PI/2,-PI/2],
+    '┌':[0,PI/2], '┐':[PI,PI/2], '└':[0,-PI/2], '┘':[PI,-PI/2],
+    'v':[PI/2,PI/2], '^':[-PI/2,-PI/2], '>':[0,0], '<':[PI,PI],
+    '╱':[-PI/4,PI*.75], '╲':[PI/4,-PI*.75],
+    '∧':[PI/4,PI*.75], '∨':[-PI/4,-PI*.75]
+  };
+  // Each character is a 3 × 6 tile font. Two rays remain present in every tile.
+  // 0/3/4/5/9 are transcribed from official AMT120/144 time photographs; remaining
+  // digits follow the same outline grammar. Opposite rays make a full stroke,
+  // coincident rays make its half-length terminals, including the inner slit of 0.
+  const glyphs = {
+    '0':['┌-┐','|v|','|||','|||','|^|','└-┘'],
+    '1':['/┌┐','/||','/||','/||','/||','/└┘'],
+    '2':['┌-┐','└┐|','┌┘|','|┌┘','|└┐','└-┘'],
+    '3':['┌-┐','└┐|','┌┘|','└┐|','┌┘|','└-┘'],
+    '4':['┌┐┐','|||','|└|','└┐|','/||','/└┘'],
+    '5':['┌-┐','|┌┘','|└┐','└┐|','┌┘|','└-┘'],
+    '6':['┌-┐','|┌┘','|└┐','|v|','|^|','└-┘'],
+    '7':['┌-┐','└┐|','/||','/||','/||','/└┘'],
+    '8':['┌-┐','|v|','|^|','|v|','|^|','└-┘'],
+    '9':['┌-┐','|v|','|^|','└┐|','┌┘|','└-┘'],
+    A:['┌-┐','|/|','|/|','|-|','|/|','^/^'],
+    B:['┌-┐','|/|','└-┘','┌-┐','|/|','└-┘'],
+    C:['┌-<','|//','|//','|//','|//','└-<'],
+    D:['┌-┐','|/|','|/|','|/|','|/|','└-┘'],
+    E:['┌-<','|//','└-<','┌//','|//','└-<'],
+    F:['┌-<','|//','└-<','v//','|//','^//'],
+    G:['┌-<','|//','|//','|>┐','|/|','└-┘'],
+    H:['v/v','|/|','└-┘','┌-┐','|/|','^/^'],
+    I:['>-<','/v/','/|/','/|/','/^/','>-<'],
+    J:['>-┐','//|','//|','v/|','|/|','└-┘'],
+    K:['v/v','|╱^','└┘/','┌┐/','|╲v','^/^'],
+    L:['v//','|//','|//','|//','|//','└-<'],
+    M:['┌∧┐','|v|','|||','|^|','|/|','^/^'],
+    N:['v/v','|╲|','|╲|','|╲|','|╲|','^/^'],
+    O:['┌-┐','|/|','|/|','|/|','|/|','└-┘'],
+    P:['┌-┐','|/|','|/|','┌-┘','|//','^//'],
+    Q:['┌-┐','|/|','|/|','|/|','|╲|','└-╲'],
+    R:['┌-┐','|/|','┌-┘','|╲/','|╲/','^/╲'],
+    S:['┌-<','|//','└-┐','//|','//|','>-┘'],
+    T:['>-<','/v/','/|/','/|/','/|/','/^/'],
+    U:['v/v','|/|','|/|','|/|','|/|','└-┘'],
+    V:['v/v','|/|','|/|','|/|','╲/╱','/∨/'],
+    W:['v/v','|/|','|v|','|||','|^|','└∨┘'],
+    X:['v/v','╲/╱','/∨/','/∧/','╱/╲','^/^'],
+    Y:['v/v','|/|','└∨┘','/|/','/|/','/^/'],
+    Z:['>-┐','//|','/╱^','v╱/','|//','└-<'],
+    ' ':['///','///','///','///','///','///'],
+    '-':['///','///','>-<','///','///','///']
+  };
+  function textPose(text, isTime=false) {
+    text=text.toUpperCase().slice(0,4);
+    const pose=Array.from({length:COUNT},()=>[PARK,PARK]);
+    const base=Math.floor((COLS-14)/2);
+    const starts=isTime?[base,base+3,base+8,base+11]:Array.from({length:text.length},(_,i)=>Math.floor((COLS-(text.length*4-1))/2)+i*4);
+    [...text].forEach((char,j) => {
+      if(!glyphs[char]) throw new Error('Unsupported character: '+char);
+      glyphs[char].forEach((line,row) => [...line].forEach((tile,col) => {
+        pose[(row+1)*COLS+starts[j]+col]=tiles[tile].slice();
+      }));
+    });
+    // AMT144 packs HH and MM without a parked column between their digits. Its
+    // colon is two 2 × 2 loops, eight clocks in total, using the same fixed hands.
+    if(isTime) for(const row of [2,4]) {
+      pose[row*COLS+base+6]=tiles['┌'].slice();pose[row*COLS+base+7]=tiles['┐'].slice();
+      pose[(row+1)*COLS+base+6]=tiles['└'].slice();pose[(row+1)*COLS+base+7]=tiles['┘'].slice();
+    }
+    return pose;
+  }
+  function timeText(date,hour12=false) {
+    const h=hour12?(date.getHours()%12||12):date.getHours();
+    return String(h).padStart(2,'0')+String(date.getMinutes()).padStart(2,'0');
+  }
+  const line=a=>[a,a+PI];
+  const patterns = [
+    {id:'slant',label:'Diagonals',angles:()=>line(PI/4)},
+    {id:'corners',label:'Corners',angles:()=>[PI/4,PI*.75]},
+    {id:'alternating',label:'Alternating',angles:c=>line(c.row%2?PI/4:-PI/4)},
+    {id:'rings',label:'Rings',angles:c=>line(c.phi+PI/2)},
+    {id:'diamond',label:'Diamond',angles:c=>line(Math.atan2(Math.sign(c.y),Math.sign(c.x))+PI/2)},
+    {id:'wave',label:'Wave',angles:c=>line(.75*Math.sin(c.col*.42+c.row*.32))},
+    {id:'weave',label:'Weave',angles:c=>line((c.col+c.row)%2?PI/4:-PI/4)},
+    {id:'fan',label:'Fan',angles:c=>line(Math.atan2(c.y+6,c.x)+PI/2)},
+    {id:'parallel',label:'Parallel',angles:()=>line(0)}
+  ];
+  function pattern(id) {
+    const definition=patterns.find(p=>p.id===id);
+    if(!definition) throw new Error('Unknown pattern: '+id);
+    return cells.map(definition.angles);
+  }
+  // Organizing passages use one straight axis across the complete matrix.
+  // Keep this restricted vocabulary independent of the manual display catalog.
+  const formations = [
+    {label:'Horizontal',angle:0},
+    {label:'Vertical',angle:PI/2},
+    {label:'Falling diagonal',angle:PI/4},
+    {label:'Rising diagonal',angle:-PI/4}
+  ];
+  function destination(start,target,direction=0,turns=0) {
+    let delta=wrap(target-start);
+    if(direction>0) delta=mod(target-start);
+    if(direction<0) delta=-mod(start-target);
+    return start+delta+(direction||Math.sign(delta)||1)*turns*TAU;
+  }
+  // Limits use artistic seconds; rates above 1 explicitly accelerate playback for debugging.
+  const MOTION = Object.freeze({maxSpeed:PI/6,maxAcceleration:PI/12,fieldTempo:.55,flowSeconds:24});
+
+  // A subdivided Bernstein hull bounds the whole polynomial, not just sampled frames.
+  function hullBound(points,depth=3) {
+    if(!depth) return Math.max(...points.map(Math.abs));
+    const left=[points[0]],right=[points.at(-1)];
+    let row=points;
+    while(row.length>1) {
+      row=row.slice(1).map((v,i)=>(v+row[i])/2);
+      left.push(row[0]);right.unshift(row.at(-1));
+    }
+    return Math.max(hullBound(left,depth-1),hullBound(right,depth-1));
+  }
+  function hullWithin(points,limit,depth=3) {
+    if(points.every(v=>Math.abs(v)<=limit)) return true;
+    if(!depth||Math.abs(points[0])>limit||Math.abs(points.at(-1))>limit) return false;
+    const left=[points[0]],right=[points.at(-1)];let row=points;
+    while(row.length>1) {
+      row=row.slice(1).map((v,i)=>(v+row[i])/2);
+      left.push(row[0]);right.unshift(row.at(-1));
+    }
+    return hullWithin(left,limit,depth-1)&&hullWithin(right,limit,depth-1);
+  }
+  class Segment {
+    constructor(start,duration,from,to,coefficients=null) {
+      this.start=start;this.duration=duration;this.end=start+duration;
+      this.from=from.slice();this.to=to.slice();
+      const [p,v,a]=from,T=duration,c0=p,c1=v*T,c2=a*T*T/2;
+      const d=to[0]-c0-c1-c2,e=to[1]*T-c1-2*c2,f=to[2]*T*T-2*c2;
+      this.c=coefficients||[c0,c1,c2,10*d-4*e+f/2,-15*d+7*e-f,6*d-3*e+f/2];
+    }
+    sample(time) {
+      if(time<=this.start) return this.from.slice();
+      if(time>=this.end) return this.to.slice();
+      const u=(time-this.start)/this.duration,c=this.c,T=this.duration;
+      return [c[0]+u*(c[1]+u*(c[2]+u*(c[3]+u*(c[4]+u*c[5])))),
+        (c[1]+u*(2*c[2]+u*(3*c[3]+u*(4*c[4]+u*5*c[5]))))/T,
+        (2*c[2]+u*(6*c[3]+u*(12*c[4]+u*20*c[5])))/(T*T)];
+    }
+    derivatives() {
+      const c=this.c,T=this.duration,[a,b,d,e,f]=c.slice(1).map((v,i)=>v*(i+1)/T);
+      const v=[a,a+b/4,a+b/2+d/6,a+3*b/4+d/2+e/4,a+b+d+e+f];
+      return [v,v.slice(1).map((n,i)=>4*(n-v[i])/T)];
+    }
+    bounds() {
+      const [v,a]=this.derivatives();
+      return {speed:hullBound(v),acceleration:hullBound(a)};
+    }
+    withinLimits() {
+      const [v,a]=this.derivatives();
+      return hullWithin(v,MOTION.maxSpeed)&&hullWithin(a,MOTION.maxAcceleration);
+    }
+  }
+  function rampDuration(v,a) {
+    if(Math.abs(a)<1e-12) return 0;
+    const room=MOTION.maxSpeed-(a>0?v:-v);
+    return Math.min(.6,Math.max(0,room)*1.6/Math.abs(a));
+  }
+  function accelerationCoefficients(from,to,T) {
+    return [from[0],from[1]*T,from[2]*T*T/2,(to[2]-from[2])*T*T/6,0,0];
+  }
+  class Score {
+    constructor(states) {
+      this.initial=states.map(s=>s.slice());this.states=states.map(s=>s.slice());
+      this.tracks=states.map(()=>[]);this.duration=0;this.marks=[];
+    }
+    add(h,start,duration,to,coefficients=null) {
+      this.tracks[h].push(new Segment(start,duration,this.states[h],to,coefficients));
+      this.states[h]=to.slice();
+    }
+    hold(duration) {
+      if(this.states.some(s=>Math.abs(s[1])+Math.abs(s[2])>1e-8)) throw new Error('Only a resting pose can hold.');
+      for(let h=0;h<COUNT*2;h++) this.add(h,this.duration,duration,this.states[h]);
+      this.duration+=duration;return this;
+    }
+    prependHold(duration) {
+      if(duration<=1e-8) return this;
+      if(this.initial.some(s=>Math.abs(s[1])+Math.abs(s[2])>1e-8)) throw new Error('Only a resting pose can wait before departure.');
+      this.tracks.forEach((track,h)=>{
+        track.forEach(s=>{s.start+=duration;s.end+=duration;});
+        track.unshift(new Segment(0,duration,this.initial[h],this.initial[h]));
+      });
+      this.marks.forEach(m=>m.at+=duration);this.duration+=duration;return this;
+    }
+    // Acceleration ramps retain velocity; no common resting pose is introduced.
+    // With zero acceleration at the middle connector's endpoints, extending it
+    // reduces travel demand without magnifying inherited endpoint acceleration.
+    bridge(targets,duration=6,options={}) {
+      const {direction=()=>0,turns=0,swap=false}=options,plans=[];
+      for(const c of cells) {
+        const h=2*c.i,src=[this.states[h],this.states[h+1]];
+        const route=pair=>pair.map((s,j)=>[destination(src[j][0],s[0],direction(c,j),turns),s[1],s[2]]);
+        let to=route([targets[h],targets[h+1]]);
+        if(swap) {
+          const alt=route([targets[h+1],targets[h]]);
+          const cost=pair=>pair.reduce((sum,s,j)=>sum+Math.abs(s[0]-src[j][0]),0);
+          if(cost(alt)<cost(to)-.01) to=alt;
+        }
+        for(let j=0;j<2;j++) {
+          const from=src[j],goal=to[j];
+          for(const s of [from,goal]) {
+            if(!s.every(Number.isFinite)||Math.abs(s[1])>MOTION.maxSpeed+1e-7||Math.abs(s[2])>MOTION.maxAcceleration+1e-7) throw new Error('Transition endpoint exceeds motion limits.');
+          }
+          const head=rampDuration(from[1],from[2]),tail=rampDuration(goal[1],-goal[2]);
+          const a=head?[from[0]+from[1]*head+from[2]*head*head/3,from[1]+from[2]*head/2,0]:from;
+          const b=tail?[goal[0]-goal[1]*tail+goal[2]*tail*tail/3,goal[1]-goal[2]*tail/2,0]:goal;
+          plans.push({from,goal,head,tail,a,b,free:!turns&&!direction(c,j)});
+        }
+      }
+      let T=Math.max(duration,2,...plans.map(p=>p.head+p.tail+1)),middle;
+      for(let attempt=0;attempt<100;attempt++) {
+        const fits=s=>s.withinLimits();
+        middle=plans.map(p=>{
+          const make=shift=>new Segment(this.duration+p.head,T-p.head-p.tail,p.a,[p.b[0]+shift,p.b[1],p.b[2]]);
+          const direct=make(0);
+          if(fits(direct)||!p.free) return direct;
+          // A moving hand may reach an equivalent angle sooner by continuing its
+          // rotation than by reversing twice along the shortest angular route.
+          return [make(-TAU),make(TAU)].find(fits)||direct;
+        });
+        const safe=middle.every(fits);
+        if(safe) break;
+        if(attempt===99) throw new Error('Unable to plan a bounded transition.');
+        T*=1.12;
+      }
+      plans.forEach((p,h)=>{
+        if(p.head) this.add(h,this.duration,p.head,p.a,accelerationCoefficients(p.from,p.a,p.head));
+        const end=middle[h].to,goal=[p.goal[0]+end[0]-p.b[0],p.goal[1],p.goal[2]];
+        this.tracks[h].push(middle[h]);this.states[h]=end.slice();
+        if(p.tail) this.add(h,this.duration+T-p.tail,p.tail,goal,accelerationCoefficients(end,goal,p.tail));
+      });
+      this.duration+=T;return this;
+    }
+    pose(pose,duration=6,options={}) {
+      return this.bridge(pose.flat().map(p=>[p,0,0]),duration,{swap:true,...options});
+    }
+    // A formation is a moving waypoint: every hand crosses it at nonzero speed.
+    // Its outgoing segment starts immediately from the same p/v/a, with no hold.
+    passage(index) {
+      const formation=mod(index,formations.length),definition=formations[formation];
+      const direction=Math.sign(this.states.reduce((sum,s)=>sum+s[1],0))||1;
+      this.bridge(cells.flatMap(()=>line(definition.angle).map(p=>[p,direction*.14,0])));
+      this.marks.push({at:this.duration,label:definition.label,formation});
+      return this;
+    }
+    field(fn,duration=MOTION.flowSeconds,bridge=6) {
+      const dt=.001,step=.5;
+      const angle=(c,t,j)=>fn(c,t*MOTION.fieldTempo,j);
+      const read=(c,t,j)=>{
+        const p=angle(c,t,j),before=angle(c,t-dt,j),after=angle(c,t+dt,j);
+        return [p,(after-before)/(2*dt),(after-2*p+before)/(dt*dt)];
+      };
+      const first=cells.flatMap(c=>[read(c,0,0),read(c,0,1)]);
+      this.bridge(first,bridge);
+      const start=this.duration;
+      for(const c of cells) for(let j=0;j<2;j++) {
+        const h=2*c.i+j,offset=this.states[h][0]-first[h][0];
+        for(let t=0;t<duration-1e-8;t+=step) {
+          const T=Math.min(step,duration-t),target=read(c,t+T,j);target[0]+=offset;
+          this.add(h,start+t,T,target);
+        }
+      }
+      this.duration+=duration;return this;
+    }
+    mark(label) {this.marks.push({at:this.duration,label});return this;}
+    sample(time) {
+      time=clamp(time,0,this.duration);
+      return this.tracks.map((track,h)=>{
+        if(!track.length) return this.initial[h].slice();
+        let lo=0,hi=track.length-1;
+        while(lo<hi) {const mid=(lo+hi)>>1;if(track[mid].end<time) lo=mid+1;else hi=mid;}
+        return track[lo].sample(time);
+      });
+    }
+  }
+  const repertoire = [
+    ['Radial ripples','radial',0],['Parallel tides','tide',0],['Counter-rotation','counter',0],['Column sweep','sweep',0],
+    ['Concentric breathing','breathe',0],['Diagonal drift','diagonal',0],['Mirrored vortex','vortex',0],['Folding fan','fan',0],
+    ['Checkerboard','checker',0],['Standing waves','standing',0],['Radial echoes','radial',1],['Double waves','tide',1],
+    ['Center bloom','sweep',1],['Diamond ripples','breathe',1],['Herringbone','diagonal',1],
+    ['Twin vortices','vortex',1],['Wind field','fan',1],['Weave','weave',0],['Convergence','standing',1]
+  ];
+  function fieldFor(family,variant) {
+    return (c,t,j) => {
+      const sign=j===0?1:-1,phase=variant?PI/2:0,rad=variant?Math.abs(c.x)*.7+Math.abs(c.y):c.r;
+      switch(family) {
+        case 'radial': return c.phi+PI/2+j*PI+sign*(1.05*Math.sin(rad*.66-t*.48+phase)+.14*t);
+        case 'tide': {
+          // Parallel tides moves each opposing pair as one axis; only Double waves opens the hands.
+          const handPhase=variant?j*.35:0;
+          return .58*t+c.col*.21+PI*j+.65*Math.sin(c.col*.35-c.row*(variant?.5:0)-t*.36+handPhase);
+        }
+        case 'counter': return sign*(t*.48+c.col*.19+c.row*.12)+PI*j;
+        case 'sweep': return PI*j+.53*t-(variant?c.r*.36:c.col*.27)+.25*Math.sin(t*.4-c.row*.45);
+        case 'breathe': return c.phi+PI/2+j*PI+sign*1.34*Math.sin(rad*.68-t*.45+phase);
+        case 'diagonal': return (variant&&c.row%2?-1:1)*(.47*t-c.col*.3-c.row*.43)+j*PI+sign*.35*Math.sin(t*.3);
+        case 'vortex': {
+          const x=variant?c.x+(c.x<0?4.5:-4.5):c.x,y=c.y;
+          return Math.atan2(y,x)+PI/2+j*PI+sign*.38*t+Math.hypot(x,y)*.24+.6*Math.sin(Math.hypot(x,y)*.5-t*.4);
+        }
+        case 'fan': return Math.atan2(c.y+6,c.x)+PI/2+j*PI+sign*(.8*Math.sin(t*.45+c.col*.13)+.25*Math.sin(c.row*.4-t*.3+phase));
+        case 'weave': {
+          // Four clocks outline one loop; all loops share the same opening.
+          // Offset the columns so half loops continue through both side edges.
+          const inward=Math.atan2(.5-c.row%2,c.col%2-.5);
+          const opening=3*PI/8+PI/8*Math.sin(t*.48);
+          return inward+sign*opening;
+        }
+        case 'checker': {
+          // Four clocks form a tile. Opening and turning contrast alternate a
+          // quarter cycle apart, keeping neighbors distinct as their shapes trade.
+          // Bounded row/column phase offsets change which group leads the phrase.
+          const col=Math.floor(c.col/2)%2?-1:1,row=Math.floor(c.row/2)%2?-1:1,parity=col*row;
+          const beat=t*.48+.4*col*Math.sin(t*.21)+.4*row*Math.cos(t*.17);
+          const inward=Math.atan2(.5-c.row%2,.5-c.col%2);
+          const turn=.3*Math.sin(t*.18)+parity*.55*Math.sin(beat);
+          const opening=PI/4+parity*.67*Math.cos(beat);
+          return inward+turn+sign*opening;
+        }
+        default: return j*PI+1.3*Math.sin(c.col*(variant?.3:.5)+phase)*Math.cos(t*.4)+sign*.55*Math.sin(c.row*.5-t*.42);
+      }
+    };
+  }
+  function buildPerformance(states,index,flowSeconds=MOTION.flowSeconds,formation=null) {
+    const [,family,variant]=repertoire[index],score=new Score(states).mark('Transition');
+    if(formation!==null) score.passage(formation);
+    score.field(fieldFor(family,variant),flowSeconds);
+    score.marks.push({at:score.duration-flowSeconds,label:'Flow'});
+    return score;
+  }
+  const CLOCK_HOLD_SECONDS=6;
+  // Director schedules real deadlines around bounded trajectories. Spare time is
+  // spent on the existing clock pose before departure, never by rushing a return.
+  class Director {
+    constructor(now=Date.now(),mode='exhibition',random=Math.random) {
+      this.mode=mode;this.index=0;this.hour12=false;this.speed=1;this.rate=1;this.ramp=null;
+      this.kind='text';this.random=random;this.formationIndex=Math.floor(random()*formations.length);
+      this.paused=false;this.lastCycle=-1;this.deadline=0;this.targetTime='';this.label='Local time';
+      this.states=textPose(timeText(new Date(now)),true).flat().map(p=>[p,0,0]);
+      this.play(new Score(this.states).hold(3),'opening');
+      if(mode!=='exhibition') this.showTime(now);
+    }
+    get timed() {return this.mode==='active'||this.mode==='original';}
+    // Only departure from typography needs a formation; typography orders the return.
+    needsPassage(kind) {return this.kind==='text'&&kind==='pattern';}
+    // Cache the next random formation through planning retries. A committed
+    // departure draws a different successor; direct routes do not consume it.
+    play(score,phase,kind=this.kind) {
+      if(this.needsPassage(kind)) {
+        this.formationIndex=mod(this.formationIndex+1+Math.floor(this.random()*(formations.length-1)),formations.length);
+      }
+      this.kind=kind;this.score=score;this.elapsed=0;this.phase=phase;
+    }
+    sceneScore(kind) {
+      const score=new Score(this.states);
+      return this.needsPassage(kind)?score.passage(this.formationIndex):score;
+    }
+    currentText(now) {return timeText(new Date(now),this.hour12);}
+    changeRate(target) {
+      target=clamp(target,.25,3);
+      if(this.ramp?.to===target||(!this.ramp&&this.rate===target)) return;
+      const duration=target>1||this.rate>1?1.5:Math.max(3,Math.abs(target-this.rate)*10);
+      this.ramp={from:this.rate,to:target,elapsed:0,duration};
+    }
+    setSpeed(speed,now=Date.now()) {
+      this.speed=clamp(speed,.25,3);
+      if(!this.timed) {
+        this.changeRate(this.speed);
+        if(this.phase==='minute') this.showTime(now);
+      }
+    }
+    setMode(mode,now) {
+      this.mode=mode;this.deadline=0;this.lastCycle=-1;this.changeRate(this.timed?1:this.speed);
+      if(mode==='exhibition') this.start(now);else this.showTime(now);
+    }
+    start(now) {
+      this.label=repertoire[this.index][0];this.deadline=0;
+      const formation=this.needsPassage('pattern')?this.formationIndex:null;
+      this.play(buildPerformance(this.states,this.index,MOTION.flowSeconds,formation),'performance','pattern');
+    }
+    next(now) {this.select((this.index+1)%repertoire.length,now);}
+    select(index,now) {
+      this.index=index;this.mode='exhibition';this.changeRate(this.speed);this.start(now);
+    }
+    showTime(now) {this.deadline=0;this.returnTime(now,6,false);}
+    showPose(pose,label,kind='pattern') {
+      this.deadline=0;this.label=label;
+      this.play(this.sceneScore(kind).pose(pose),'manual',kind);
+    }
+    returnTime(now,duration=6,thenNext=this.mode==='exhibition') {
+      this.deadline=0;this.thenNext=thenNext;this.label='Local time';
+      let at=now,score;
+      for(let attempt=0;attempt<5;attempt++) {
+        this.targetTime=this.currentText(at);
+        const earliest=Math.max(0,Math.floor(at/60000)*60-now/1000);
+        score=this.sceneScore('text');
+        score.pose(textPose(this.targetTime,true),Math.max(duration,this.previewDelta(earliest)-score.duration));
+        const arrival=now+this.realDuration(score.duration)*1000;
+        if(this.currentText(arrival)===this.targetTime) break;
+        at=Math.max(at,arrival);
+      }
+      this.play(score,'return','text');
+    }
+    planMinute(now) {
+      const next=(Math.floor(now/60000)+1)*60000;
+      this.targetTime=this.currentText(next);this.label='Local time';
+      const score=new Score(this.states).pose(textPose(this.targetTime,true));
+      score.prependHold(Math.max(0,this.previewDelta((next-now)/1000)-score.duration));
+      this.play(score,'minute');
+    }
+    startTimed(now) {
+      const minute=Math.floor(now/60000),deadline=(minute+1)*60000,available=(deadline-now)/1000;
+      this.lastCycle=minute;this.index=this.mode==='original'?0:mod(minute,repertoire.length);
+      const target=this.currentText(deadline);let selected=null;
+      for(let flow=MOTION.flowSeconds;flow>=2;flow-=2) {
+        const score=buildPerformance(this.states,this.index,flow,this.formationIndex)
+          .mark('Returning to time').pose(textPose(target,true));
+        if(score.duration>available) continue;
+        selected=score;break;
+      }
+      // A late start may leave room for a calm time update but no full piece.
+      const score=selected||new Score(this.states).pose(textPose(target,true));
+      if(score.duration>available) return false;
+      score.prependHold(available-score.duration);
+      this.targetTime=target;this.deadline=deadline;this.label=selected?repertoire[this.index][0]:'Local time';
+      this.play(score,selected?'scheduled':'minute',selected?'pattern':'text');return true;
+    }
+    resume(now) {
+      if(this.phase==='manual') return;
+      if(this.timed||this.phase==='clock'||this.phase==='minute') this.showTime(now);
+      else if(this.phase==='holding'||this.phase==='return') this.returnTime(now,6,this.phase==='holding'||this.thenNext);
+    }
+    previewDelta(dt) {
+      if(!this.ramp) return dt*this.rate;
+      const r=this.ramp,a=r.elapsed,b=Math.min(a+dt,r.duration),F=u=>u**6-3*u**5+2.5*u**4;
+      return r.from*(b-a)+(r.to-r.from)*r.duration*(F(b/r.duration)-F(a/r.duration))+Math.max(0,dt-(b-a))*r.to;
+    }
+    realDuration(distance) {
+      if(!this.ramp) return distance/this.rate;
+      let lo=0,hi=distance/.25;
+      for(let n=0;n<45;n++) {const mid=(lo+hi)/2;if(this.previewDelta(mid)<distance) lo=mid;else hi=mid;}
+      return (lo+hi)/2;
+    }
+    scaledDelta(dt) {
+      const delta=this.previewDelta(dt);
+      if(this.ramp) {
+        const r=this.ramp;r.elapsed=Math.min(r.elapsed+dt,r.duration);
+        const u=r.elapsed/r.duration;this.rate=r.from+(r.to-r.from)*(6*u**5-15*u**4+10*u**3);
+        if(r.elapsed===r.duration) {this.rate=r.to;this.ramp=null;}
+      }
+      return delta;
+    }
+    finish(now) {
+      if(this.phase==='opening') this.start(now);
+      else if(this.phase==='performance') this.returnTime(now);
+      else if(this.phase==='scheduled') {
+        this.deadline=0;this.label='Local time';this.play(new Score(this.states).hold(CLOCK_HOLD_SECONDS),'clock','text');
+      } else if(this.phase==='return'||this.phase==='minute') {
+        if(this.targetTime!==this.currentText(now)) this.returnTime(now,6,this.phase==='return'&&this.thenNext);
+        else if(this.phase==='return'&&this.thenNext) this.play(new Score(this.states).hold(CLOCK_HOLD_SECONDS),'holding');
+        else if(this.timed) this.play(new Score(this.states).hold(CLOCK_HOLD_SECONDS),'clock');
+        else this.planMinute(now);
+      } else if(this.phase==='holding') {this.index=(this.index+1)%repertoire.length;this.start(now);}
+    }
+    tick(dt,now) {
+      if(this.paused) return;
+      let remaining=Math.max(0,dt),cursor=now-remaining*1000;
+      for(let guard=0;guard<30&&remaining>1e-9;guard++) {
+        const distance=Math.max(0,this.score.duration-this.elapsed);
+        if(distance<1e-9) {
+          if(this.phase==='manual'||this.phase==='clock') {this.scaledDelta(remaining);break;}
+          this.finish(cursor);continue;
+        }
+        const slice=Math.min(remaining,this.realDuration(distance));
+        this.elapsed=Math.min(this.score.duration,this.elapsed+this.scaledDelta(slice));
+        remaining-=slice;cursor+=slice*1000;this.states=this.score.sample(this.elapsed);
+        if(this.elapsed>=this.score.duration-1e-8&&this.phase!=='manual'&&this.phase!=='clock') this.finish(cursor);
+      }
+      if((this.phase==='holding'||this.phase==='clock')&&this.currentText(now)!==this.targetTime) {
+        this.returnTime(now,6,this.phase==='holding');
+      }
+      if(this.phase==='clock'&&this.timed&&!this.ramp) {
+        const minute=Math.floor(now/60000),second=(now%60000)/1000;
+        if(second>=CLOCK_HOLD_SECONDS&&second<18&&minute!==this.lastCycle) this.startTimed(now);
+      }
+    }
+  }
+  return {TAU,PI,COLS,ROWS,COUNT,PARK,cells,tiles,glyphs,wrap,mod,clamp,textPose,timeText,pattern,patterns,formations,destination,MOTION,Segment,Score,repertoire,fieldFor,buildPerformance,Director};
+})();
+
+/* Canvas is a projection only. Director is also executable in Node for numerical
+ * continuity, minute-boundary, interruption, and transport regression tests. */
+(() => {
+  const C=ClockCore,$=id=>document.getElementById(id),canvas=$('clock'),ctx=canvas.getContext('2d');
+  const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const player=new C.Director(Date.now(),reduced?'minimal':'exhibition');
+  let lastStamp=null,hidden=document.hidden,cssWidth=0,cssHeight=0,unit=0,dpr=0,lastUi=0;
+  function resize() {
+    dpr=Math.min(window.devicePixelRatio||1,3);
+    const w=innerWidth,h=innerHeight,padding=w<600?22:Math.max(52,w*.055);
+    unit=Math.max(1,Math.min((w-2*padding)/C.COLS,(h-(h<420?102:190))/C.ROWS));
+    cssWidth=unit*C.COLS;cssHeight=unit*C.ROWS;
+    canvas.style.width=cssWidth+'px';canvas.style.height=cssHeight+'px';
+    canvas.width=Math.round(cssWidth*dpr);canvas.height=Math.round(cssHeight*dpr);render();
+  }
+  function render() {
+    ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,cssWidth,cssHeight);
+    ctx.fillStyle='#252724';
+    const half=Math.max(.42,unit*.077/2);
+    for(const c of C.cells) {
+      const x=(c.col+.5)*unit,y=(c.row+.5)*unit;
+      ctx.beginPath();
+      for(let j=0;j<2;j++) {
+        const length=unit*(j===0?.42:.38);
+        const a=player.states[c.i*2+j][0],co=Math.cos(a),si=Math.sin(a);
+        const tx=x+co*length,ty=y+si*length,px=-si*half,py=co*half;
+        // A semicircular heel removes pivot corners while retaining flat tips.
+        ctx.moveTo(x+px,y+py);ctx.lineTo(tx+px,ty+py);
+        ctx.lineTo(tx-px,ty-py);ctx.lineTo(x-px,y-py);
+        ctx.arc(x,y,half,a-C.PI/2,a+C.PI/2,true);ctx.closePath();
+      }
+      ctx.fill();
+    }
+  }
+  function updateUi() {
+    const performing=['performance','scheduled'].includes(player.phase),p=player;
+    $('sceneName').textContent=performing?C.repertoire[p.index][0]:p.phase==='return'?'Returning to time':p.label;
+    $('sequenceNumber').textContent=performing?String(p.index+1).padStart(2,'0')+' / '+C.repertoire.length:String(C.COUNT);
+    $('progress').style.transform='scaleX('+Math.min(p.elapsed/p.score.duration,1)+')';
+    $('mode').value=p.mode;$('choreography').value=String(p.index);
+    $('speed').disabled=p.timed;$('speed').value=String(p.timed?1:p.speed);$('speedValue').textContent=(p.timed?1:p.speed)+'×'+(!p.timed&&p.speed>1?' · Debug':'');
+    $('speed').title=p.timed?'This mode follows real minutes':'Playback speed';
+    $('pause').textContent=p.paused?'Resume':'Pause';
+    $('pause').setAttribute('aria-label',p.paused?'Resume animation':'Pause animation');
+    canvas.setAttribute('aria-label',['clock','holding','opening','minute'].includes(p.phase)?'Clock '+p.currentText(Date.now()).replace(/(..)(..)/,'$1:$2'):C.COUNT+' two-hand clocks: '+$('sceneName').textContent);
+    canvas.dataset.phase=p.phase;
+  }
+  function act(action) {action();updateUi();}
+  function playPause() {
+    player.paused=!player.paused;lastStamp=null;
+    if(!player.paused) player.resume(Date.now());updateUi();
+  }
+  function frame(stamp) {
+    if(lastStamp!==null&&!hidden) player.tick((stamp-lastStamp)/1000,Date.now());
+    lastStamp=stamp;
+    if(Math.min(window.devicePixelRatio||1,3)!==dpr) resize();
+    if(!hidden) render();
+    if(stamp-lastUi>125) {lastUi=stamp;updateUi();}
+    requestAnimationFrame(frame);
+  }
+  C.repertoire.forEach(([label],i)=>{
+    const option=document.createElement('option');option.value=String(i);option.textContent=String(i+1).padStart(2,'0')+' · '+label;$('choreography').append(option);
+  });
+  const panelButtons={panel:'settings',aboutPanel:'about'};
+  function closePanels(restoreFocus=false) {
+    let trigger=null;
+    for(const [id,button] of Object.entries(panelButtons)) if(!$(id).hidden) {
+      $(id).hidden=true;trigger=$(button);trigger.setAttribute('aria-expanded','false');
+    }
+    if(restoreFocus) trigger?.focus({preventScroll:true});
+  }
+  function togglePanel(id) {
+    const open=$(id).hidden;closePanels();
+    if(open) {
+      $(id).hidden=false;$(panelButtons[id]).setAttribute('aria-expanded','true');
+      $(id==='panel'?'mode':'closeAbout').focus({preventScroll:true});
+    }
+  }
+  function setControlsVisible(show) {
+    const hadFocus=$('toolbar').contains(document.activeElement)||Object.keys(panelButtons).some(id=>$(id).contains(document.activeElement));
+    closePanels();$('toolbar').hidden=!show;
+    if(show) $('settings').focus({preventScroll:true});
+    else if(hadFocus) canvas.focus({preventScroll:true});
+  }
+  function toggleControls() {setControlsVisible($('toolbar').hidden);}
+  $('settings').addEventListener('click',()=>togglePanel('panel'));
+  $('about').addEventListener('click',()=>togglePanel('aboutPanel'));
+  $('closeControls').addEventListener('click',()=>closePanels(true));
+  $('closeAbout').addEventListener('click',()=>closePanels(true));
+  document.addEventListener('pointerdown',e=>{
+    for(const [id,button] of Object.entries(panelButtons)) {
+      if(!$(id).hidden&&!$(id).contains(e.target)&&!$(button).contains(e.target)) closePanels();
+    }
+  });
+  $('mode').addEventListener('change',e=>act(()=>player.setMode(e.target.value,Date.now())));
+  $('choreography').addEventListener('change',e=>act(()=>player.select(Number(e.target.value),Date.now())));
+  $('speed').addEventListener('input',e=>act(()=>player.setSpeed(Number(e.target.value),Date.now())));
+  $('format').addEventListener('change',e=>act(()=>{player.hour12=e.target.value==='12';player.showTime(Date.now());}));
+  $('timeButton').addEventListener('click',()=>act(()=>player.showTime(Date.now())));
+  $('next').addEventListener('click',()=>act(()=>player.next(Date.now())));
+  $('pause').addEventListener('click',playPause);
+  $('textForm').addEventListener('submit',e=>{
+    e.preventDefault();const text=$('text').value.toUpperCase().trim();
+    if(!text||!/^[A-Z0-9 -]{1,4}$/.test(text)) {$('textError').textContent='Enter 1–4 letters, digits, spaces, or hyphens.';return;}
+    $('textError').textContent='';act(()=>player.showPose(C.textPose(text,/^\d{4}$/.test(text)),text,'text'));
+  });
+  C.patterns.forEach(({id,label})=>{
+    const button=document.createElement('button');
+    button.type='button';button.dataset.pattern=id;button.textContent=label;
+    button.addEventListener('click',()=>act(()=>player.showPose(C.pattern(id),label)));
+    $('patterns').append(button);
+  });
+  canvas.addEventListener('dblclick',toggleControls);
+  document.addEventListener('keydown',e=>{
+    const key=e.key.toLowerCase();
+    if((e.metaKey||e.ctrlKey)&&!e.altKey&&key==='k') {
+      e.preventDefault();if(!e.repeat) toggleControls();return;
+    }
+    if(e.key==='Escape') {
+      if(Object.keys(panelButtons).some(id=>!$(id).hidden)) {e.preventDefault();closePanels(true);}
+      else if(!$('toolbar').hidden) {e.preventDefault();setControlsVisible(false);}
+      return;
+    }
+    if(e.metaKey||e.ctrlKey||e.altKey||e.target.isContentEditable||/^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName)) return;
+    if(e.code==='Space'&&!/^(BUTTON|A)$/.test(e.target.tagName)) {e.preventDefault();playPause();}
+    if(e.code==='ArrowRight') {e.preventDefault();act(()=>player.next(Date.now()));}
+    if(key==='t') act(()=>player.showTime(Date.now()));
+  });
+  document.addEventListener('visibilitychange',()=>{hidden=document.hidden;lastStamp=null;if(!hidden&&!player.paused) player.resume(Date.now());});
+  window.addEventListener('resize',resize);
+  resize();updateUi();requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
