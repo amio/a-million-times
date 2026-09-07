@@ -1,3 +1,5 @@
+> Current catalog: eight official-reference reconstructions plus [seven selected independent choreographies](implemented/curated-choreography.md), all available in the [interactive study](../index.html?study=1). See the [design guide](choreography-design-guide.md) and [source inventory](reference/official/catalog.md) for official visual evidence.
+
 # A Million Times 144
 
 Live: [amilliontimes.vercel.app](https://amilliontimes.vercel.app/)
@@ -57,11 +59,11 @@ The Static patterns catalog contains nine manually selected displays: Diagonals,
 
 Routing accounts for existing motion. If the shortest angular route would first require a reversal, the planner checks adjacent full-turn equivalents and chooses a smooth route under the same bounds. This choice is available only when no direction or turn count was explicitly requested. The planner never compresses a trajectory to meet a deadline.
 
-Continuous patterns are spatial phase fields: angles depend on row, column, distance from the center, direction, and time. Radial waves use distance as phase; fans use viewing angle; counter-rotation moves a cell's two hands in opposite directions. Fields compile into the same trajectory format as characters and static patterns, so all use the same transition logic.
+Continuous patterns are spatial phase fields: angles depend on row, column, distance from the center, direction, and time. Diamond ripples uses Manhattan distance as phase; Concentric breathing shares one opening across Euclidean rings; counter-rotation moves a cell's two hands in opposite directions. Fields compile into the same trajectory format as characters and static patterns, so all use the same transition logic.
 
-Nineteen sequences cover eleven motion families and their variants: radial, tide, counter-rotation, sweep, breathing, diagonal, vortex, fan, checkerboard, standing waves, and weave. They interpret the original motion language through independently authored sequences; **they are not recovered copies of the original 20 proprietary trajectories**.
+The default collection contains eight official-reference reconstructions. The separate Independent studies collection contains seven selected sequences: Counter-rotation, Column sweep, Checkerboard, Twin vortices, Mirrored vortex, Concentric breathing, and Diamond ripples. The seven studies are independently authored; **they are not recovered copies of the original 20 proprietary trajectories**. Mirrored vortex uses one central focus and reflects each straight pair across the vertical axis; opposite halves rotate in opposite directions. Concentric breathing changes its opening globally, while Diamond ripples carries folds outward along diamond-shaped shells.
 
-Weave repeats one four-clock loop across the matrix, following the small-ring geometry in the supplied reference frame. A one-column offset leaves half loops at both side edges. Every loop shares one smooth opening: square corners unfold through an octagonal ring into a diamond lattice and gather again, with no regional phase offsets or added tilt. The geometry follows the reference; the synchronized opening trajectory is independently authored. The 24-second flow stays below 6 degrees per second at 1×. Sequence numbering and rotation read the current catalog length.
+Weave is a static pattern. It repeats the former animated four-clock loop at its initial 135° opening. A one-column offset leaves half loops at both side edges. It settles through the same bounded transition as the other manual displays, then stays still until another action. It is absent from sequence selection and automatic playback.
 
 Checkerboard uses a 9 × 4 board of tiles, each formed by four clocks with quarter-turn symmetry. Neighboring tiles exchange compact knots, open frames, and opposing folded corners. Opening and turning contrast are a quarter cycle apart: when the opening difference fades, the orientation difference grows. Bounded row and column phase offsets create four evolving rhythmic groups without dissolving the alternating board. These continuous, deterministic fields preserve motion through every pose; the 24-second Checkerboard flow stays below 17 degrees per second at 1×.
 
@@ -74,8 +76,8 @@ Controls and playback information are hidden debugging tools with no visible ent
 | Control | Behavior |
 |---|---|
 | Exhibition | Continuous choreography, returning to time between sequences |
-| Active | Rotates through sequences on real minutes and returns at each minute boundary |
-| Original | Repeats this implementation's radial choreography on real minutes |
+| Active | Rotates through the eight references on real minutes and returns at each minute boundary |
+| Original | Repeats the reference Radial release on real minutes |
 | Speed | 0.25–1× for slow and normal playback; above 1× is labeled Debug, up to 3× |
 | Minimal | Displays time and changes only the necessary hands |
 | Text | 1–4 letters A–Z, digits, spaces, or hyphens; four digits use the clock layout and colon |
@@ -91,8 +93,8 @@ Minimal plans the necessary hand changes ahead of each minute. If pause or backg
 
 ## Validation
 
-All 29 automated checks pass. They cover the AMT144 layout and glyphs, crossing zero and full turns, pause recovery, frame-rate independence, time formatting, whole-polynomial peak bounds, 361 interrupted sequence pairs, Parallel tides straight-line geometry, synchronized Weave loop geometry, persistent Checkerboard tile symmetry and contrast, every manual target, minute and midnight changes, late minute scheduling, and arrival prediction at different playback speeds. All 19 sequences preserve position, velocity, and acceleration at joins. Normal playback and rapid operations remain within 30 degrees per second; 3× debugging remains available.
+Automated checks cover the AMT144 layout and glyphs, crossing zero and full turns, pause recovery, frame-rate independence, time formatting, whole-polynomial peak bounds, every interrupted pair across all 15 sequences, official reference geometry and image availability, static Weave loops, Checkerboard tile symmetry and contrast, mirrored counterflow, synchronized breathing, diamond propagation, every manual target, minute changes, and arrival prediction at different playback speeds. All 15 sequences preserve position, velocity, and acceleration at joins. Normal playback and rapid operations remain within 30 degrees per second; 3× debugging remains available.
 
-Formation checks cover four uniform straight axes across the complete matrix, nonzero waypoint velocity, matching motion for repeated letter strokes, outgoing-only passages, random selection without consecutive repeats, stable choices through planning retries, and direct time returns after interruption. All 19 minute sequences are checked with each of the four formations. The nine static patterns remain independently selectable resting displays.
+Formation checks cover four uniform straight axes across the complete matrix, nonzero waypoint velocity, matching motion for repeated letter strokes, outgoing-only passages, random selection without consecutive repeats, stable choices through planning retries, and direct time returns after interruption. All eight reference minute sequences are checked with each of the four formations. The nine static patterns remain independently selectable resting displays.
 
 Browser checks cover the default hidden toolbar, ⌘K / Ctrl+K, input focus and validation, panel dismissal, About and its source link, and desktop, portrait, and landscape layout. The single file opens directly or can be served by a static server or Vercel.

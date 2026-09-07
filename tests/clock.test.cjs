@@ -102,40 +102,25 @@ test('all catalog scores have contiguous C2 tracks and finite bounded motion',()
   console.log(`Peak authored angular speed: ${largestSpeed.toFixed(3)} rad/s`);
 });
 
-test('Parallel tides keeps every clock straight while Double waves may open its hands',()=>{
-  const parallel=C.fieldFor('tide',0),double=C.fieldFor('tide',1);
-  let doubleOpens=false;
-  for(let t=0;t<=C.MOTION.flowSeconds;t+=.25) for(const cell of C.cells) {
-    near(C.wrap(parallel(cell,t,1)-parallel(cell,t,0)-Math.PI),0);
-    if(Math.abs(C.wrap(double(cell,t,1)-double(cell,t,0)-Math.PI))>.01) doubleOpens=true;
+test('static Weave preserves the four-clock loops and rests indefinitely',()=>{
+  const pose=C.pattern('weave'),pair=(col,row)=>pose[row*C.COLS+col];
+  const same=(a,b,turn=0)=>a.forEach((angle,j)=>near(C.wrap(angle-b[j]-turn),0));
+  for(let row=0;row<C.ROWS;row++) for(let col=0;col<C.COLS;col++) {
+    if(col>=2) same(pair(col,row),pair(col-2,row));
+    if(row>=2) same(pair(col,row),pair(col,row-2));
+    near(Math.abs(C.wrap(pair(col,row)[0]-pair(col,row)[1])),3*Math.PI/4);
   }
-  assert.ok(doubleOpens,'Double waves must retain its independent hand phase.');
-});
-
-test('Weave repeats one synchronized four-clock loop, including both half-loop edges',()=>{
-  const index=C.repertoire.findIndex(([name])=>name==='Weave');
-  const score=C.buildPerformance(states(),index),start=score.duration-C.MOTION.flowSeconds;
-  let smallest=Infinity,largest=0;
-  for(let t=0;t<=C.MOTION.flowSeconds;t+=.25) {
-    const frame=score.sample(start+t);
-    const pair=(col,row)=>[frame[2*(row*C.COLS+col)][0],frame[2*(row*C.COLS+col)+1][0]];
-    const same=(a,b,turn=0)=>a.forEach((angle,j)=>near(C.wrap(angle-b[j]-turn),0,1e-6));
-    for(let row=0;row<C.ROWS;row++) for(let col=0;col<C.COLS;col++) {
-      if(col>=2) same(pair(col,row),pair(col-2,row));
-      if(row>=2) same(pair(col,row),pair(col,row-2));
-    }
-    const anchor=pair(1,0);
-    for(const [col,row,turn] of [[2,0,Math.PI/2],[2,1,Math.PI],[1,1,-Math.PI/2]]) same(pair(col,row),anchor,turn);
-    const opening=Math.abs(C.wrap(anchor[0]-anchor[1]));
-    if(t===0) near(opening,3*Math.PI/4);
-    smallest=Math.min(smallest,opening);largest=Math.max(largest,opening);
-  }
-  assert.ok(smallest<1.6&&smallest>=Math.PI/2-1e-6,'Loops must gather into squares.');
-  assert.ok(largest>3.1,'Loops must unfold into a diamond lattice.');
+  const anchor=pair(1,0);
+  for(const [col,row,turn] of [[2,0,Math.PI/2],[2,1,Math.PI],[1,1,-Math.PI/2]]) same(pair(col,row),anchor,turn);
+  const p=new C.Director(date());p.showPose(pose,'Weave');
+  const duration=p.score.duration,target=p.score.sample(duration);
+  p.tick(duration+120,date()+1000*(duration+120));
+  assert.equal(p.phase,'manual');assert.equal(p.label,'Weave');compare(p.states,target);
+  for(const s of p.states) {near(s[1],0);near(s[2],0);}
 });
 
 test('Checkerboard retains contrasting four-clock tiles as open and folded roles trade',()=>{
-  const index=C.repertoire.findIndex(([name])=>name==='Checkerboard');
+  const index=C.repertoire.findIndex(p=>p.label==='Checkerboard');
   const score=C.buildPerformance(states(),index),start=score.duration-C.MOTION.flowSeconds;
   const distance=(a,b)=>Math.min(
     Math.hypot(C.wrap(a[0]-b[0]),C.wrap(a[1]-b[1])),

@@ -43,8 +43,7 @@ test('all interrupted sequence-to-sequence entries preserve motion and obey the 
   for(let i=0;i<C.repertoire.length;i++) {
     const source=authored[i],current=source.sample((source.duration-C.MOTION.flowSeconds)*.62);
     for(let j=0;j<C.repertoire.length;j++) {
-      const [,family,variant]=C.repertoire[j];
-      const transition=new C.Score(current).field(C.fieldFor(family,variant),0);
+      const transition=new C.Score(current).field(C.repertoire[j].field,0);
       check(transition);
       assert.ok(transition.states.some(s=>Math.abs(s[1])>.01));
     }
@@ -75,7 +74,7 @@ test('all minute changes and midnight remain bounded and leave identical poses s
 });
 
 test('minute scheduling budgets complete bounded motion rather than compressing it',()=>{
-  for(let minute=0;minute<C.repertoire.length;minute++) for(const second of [6,17.9]) {
+  for(let minute=0;minute<C.references.length;minute++) for(const second of [6,17.9]) {
     const t=new Date(2026,8,5,23,minute,0).getTime()+second*1000;
     const p=new C.Director(t,'active');p.states=states(p.currentText(t));
     assert.ok(p.startTimed(t),`could not schedule ${minute}:${second}`);
@@ -85,7 +84,7 @@ test('minute scheduling budgets complete bounded motion rather than compressing 
 });
 
 test('arrival-time prediction remains consistent near a minute boundary at every speed',()=>{
-  for(const speed of [.25,1,3]) for(const second of [45,51,53,57,59]) for(const i of [0,2,8,9,C.repertoire.findIndex(([label])=>label==='Weave')]) {
+  for(const speed of [.25,1,3]) for(const second of [45,51,53,57,59]) for(const i of C.repertoire.keys()) {
     const t=now+second*1000,p=new C.Director(t);
     p.rate=speed;p.speed=speed;p.kind='pattern';p.states=authored[i].sample(authored[i].duration-2);
     p.showTime(t);check(p.score);
@@ -147,7 +146,7 @@ test('dedicated formations align all hands on four straight axes without dwellin
   assert.equal(C.formations.length,4);
   assert.equal(new Set(C.formations.map(f=>C.mod(f.angle,Math.PI))).size,4);
   for(let i=0;i<C.formations.length;i++) {
-    const score=new C.Score(states('0935')).passage(i).field(C.fieldFor('radial',0),2);
+    const score=new C.Score(states('0935')).passage(i).field(C.repertoire.find(p=>p.id==='concentric-breathing').field,2);
     check(score);
     const [mark]=passages(score),at=score.sample(mark.at);
     assert.equal(at.length,288);
@@ -216,7 +215,7 @@ test('random choices skip immediate repeats and survive direct routes and failed
 });
 
 test('every minute sequence fits all random formations without redrawing during retries',()=>{
-  for(let i=0;i<C.repertoire.length;i++) for(let index=0;index<C.formations.length;index++) {
+  for(let i=0;i<C.references.length;i++) for(let index=0;index<C.formations.length;index++) {
     const t=new Date(2026,8,5,23,i,6).getTime();let draws=0;
     const p=new C.Director(t,'active',()=>++draws===1?(index+.5)/C.formations.length:.5);
     assert.equal(p.formationIndex,index);

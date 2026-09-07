@@ -1,0 +1,132 @@
+[
+  {
+    "time": 12,
+    "openingHalfDegrees": [
+      57.0,
+      70.2,
+      75.8,
+      81.9,
+      87.9
+    ]
+  },
+  {
+    "time": 14,
+    "openingHalfDegrees": [
+      35.6,
+      52.7,
+      65.7,
+      80.8,
+      88.8
+    ]
+  },
+  {
+    "time": 16,
+    "openingHalfDegrees": [
+      14.3,
+      14.1,
+      29.8,
+      53.1,
+      82.4
+    ]
+  },
+  {
+    "time": 18,
+    "openingHalfDegrees": [
+      63.0,
+      36.8,
+      18.8,
+      10.4,
+      46.7
+    ]
+  },
+  {
+    "time": 20,
+    "openingHalfDegrees": [
+      126.6,
+      97.5,
+      75.0,
+      46.8,
+      9.5
+    ]
+  },
+  {
+    "time": 22,
+    "openingHalfDegrees": [
+      157.2,
+      169.8,
+      145.3,
+      110.6,
+      66.7
+    ]
+  },
+  {
+    "time": 24,
+    "openingHalfDegrees": [
+      85.3,
+      108.6,
+      134.7,
+      171.1,
+      132.8
+    ]
+  },
+  {
+    "time": 26,
+    "openingHalfDegrees": [
+      16.6,
+      36.4,
+      59.1,
+      98.2,
+      156.0
+    ]
+  },
+  {
+    "time": 28,
+    "openingHalfDegrees": [
+      58.3,
+      30.7,
+      10.2,
+      26.3,
+      83.4
+    ]
+  },
+  {
+    "time": 30,
+    "openingHalfDegrees": [
+      133.0,
+      102.9,
+      77.3,
+      44.1,
+      10.6
+    ]
+  },
+  {
+    "time": 32,
+    "openingHalfDegrees": [
+      145.7,
+      172.1,
+      156.3,
+      118.2,
+      67.2
+    ]
+  },
+  {
+    "time": 34,
+    "openingHalfDegrees": [
+      71.7,
+      94.9,
+      120.6,
+      161.4,
+      140.6
+    ]
+  },
+  {
+    "time": 36,
+    "openingHalfDegrees": [
+      33.5,
+      45.5,
+      44.6,
+      84.4,
+      144.0
+    ]
+  }
+]

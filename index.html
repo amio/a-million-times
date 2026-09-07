@@ -37,6 +37,7 @@
   .about-panel { top:78px; }
   .panel-header { display:flex; align-items:center; justify-content:space-between; margin:-6px -8px 16px 0; gap:16px; }
   .panel-header h2 { margin:0; font-size:14px; font-weight:500; }
+  .panel-header .quiet { width:36px; height:36px; padding:0; flex-shrink:0; display:grid; place-items:center; border-radius:50%; }
   .about-panel p { color:var(--muted); margin:0 0 18px; line-height:1.65; }
   .about-panel a { color:inherit; text-underline-offset:3px; }
   .about-panel .source { color:var(--ink); }
@@ -54,6 +55,32 @@
   .patterns button { padding:8px 4px; font-size:12px; border:1px solid var(--line); background:transparent; border-radius:4px; }
   .patterns button:hover,.patterns button[aria-pressed="true"] { border-color:var(--ink); }
   #textError { color:#965039; min-height:18px; font-size:12px; margin-top:5px; }
+  .study-link { display:block; margin-top:14px; color:inherit; text-underline-offset:3px; }
+  #studyPanel { display:none; }
+  body.study main { right:390px; }
+  body.study #studyPanel { display:block; position:fixed; top:88px; right:28px; bottom:96px; width:334px; overflow:auto; padding-right:8px; }
+  #studyPanel .eyebrow { color:var(--muted); font-size:11px; letter-spacing:.1em; }
+  #studyPanel h1 { font-size:24px; font-weight:500; margin:4px 0 8px; }
+  #studyPanel p { color:var(--muted); line-height:1.8; font-size:13px; margin:10px 0; }
+  #studyPanel #studyRule { color:var(--ink); font-size:15px; }
+  #studySelect { width:100%; max-width:none; margin:0 0 10px; }
+  #referenceImage { width:100%; height:auto; max-height:140px; object-fit:contain; display:block; margin:12px 0 6px; border-radius:3px; }
+  #referenceLink { font-size:12px; color:var(--muted); text-underline-offset:3px; }
+  #studyPanel details { font-size:12px; color:var(--muted); }
+  #studyPanel summary { cursor:pointer; }
+  #studySeek { width:100%; margin:12px 0 4px; }
+  .study-timing { display:flex; justify-content:space-between; font-size:12px; color:var(--muted); }
+  #studyCues { display:flex; flex-wrap:wrap; gap:6px; margin:8px 0 14px; }
+  #studyCues button { background:none; border:1px solid var(--line); border-radius:4px; padding:6px 9px; font-size:12px; }
+  #studyPanel .note { font-size:11px; }
+  #studyPanel a { color:inherit; }
+  @media(max-width:900px) {
+    body.study { overflow:auto; }
+    body.study main { position:sticky; inset:auto; top:0; z-index:1; height:32vh; min-height:220px; margin-top:64px; background:var(--paper); }
+    body.study .top { position:absolute; }
+    body.study #studyPanel { position:relative; inset:auto; width:auto; max-width:600px; margin:0 auto; padding:0 24px 126px; overflow:visible; }
+    body.study .bottom { background:var(--paper); padding-top:10px; }
+  }
   @media(max-width:600px) {
     .top { inset:18px 18px auto; } .bottom { inset:auto 18px 18px; gap:12px; }
     .bottom-left { flex:1; flex-direction:column; align-items:flex-start; gap:4px; }
@@ -76,11 +103,13 @@
   <div class="panel-header"><h2 id="aboutTitle">A Million Times <span class="edition">144</span></h2><button id="closeAbout" class="quiet" aria-label="Close about">×</button></div>
   <p>A tribute to <a href="https://www.humanssince1982.com/" target="_blank" rel="noreferrer">Humans since 1982</a>’s A Million Times, recreating its synchronized clock hands as they form abstract patterns and tell time.</p>
   <a class="source" href="https://github.com/amio/a-million-times" target="_blank" rel="noreferrer">View source ↗</a>
+  <a class="study-link" href="?study=1">Explore the choreography ↗</a>
 </aside>
 <aside id="panel" class="panel control-panel" hidden aria-labelledby="controlsTitle">
   <div class="panel-header"><h2 id="controlsTitle">Controls</h2><button id="closeControls" class="quiet" aria-label="Close controls">×</button></div>
   <div class="row"><label for="mode">Mode</label><select id="mode"><option value="exhibition">Exhibition · Continuous</option><option value="active">Active · Every minute</option><option value="original">Original · Radial</option><option value="minimal">Minimal · Time only</option></select></div>
   <div class="row"><label for="choreography">Sequence</label><select id="choreography"></select></div>
+  <a id="studyEntry" class="study-link" href="?study=1">Explore the choreography ↗</a>
   <div class="row"><label for="speed">Speed <output id="speedValue">1×</output></label><input id="speed" type="range" min="0.25" max="3" value="1" step="0.25"></div>
   <div class="row"><label for="format">Time format</label><select id="format"><option value="24">24-hour</option><option value="12">12-hour</option></select></div>
   <div class="divider"></div>
@@ -90,17 +119,39 @@
   <div class="label">Static patterns</div>
   <div id="patterns" class="patterns"></div>
 </aside>
+<aside id="studyPanel" aria-label="Choreography study">
+  <div class="eyebrow">A MILLION TIMES · CHOREOGRAPHY</div>
+  <h1 id="studyTitle">Form and motion</h1>
+  <label for="studySelect">Choreography</label>
+  <select id="studySelect"><option value="" disabled hidden>Choose a sequence</option></select>
+  <div class="study-timing"><span id="studyKind">Selected choreography</span><span>18 × 8</span></div>
+  <div id="studyReference" hidden>
+    <a id="referenceImageLink" target="_blank" rel="noreferrer"><img id="referenceImage" alt="Official reference image and key frames" width="960" height="400"></a>
+    <a id="referenceLink" target="_blank" rel="noreferrer"></a>
+  </div>
+  <p id="studyRule"></p>
+  <div id="studyMotion">
+    <label for="studySeek">Timeline · Drag to pause and inspect</label>
+    <input id="studySeek" type="range" min="0" max="24" step="0.05" value="0">
+    <div class="study-timing"><span>Main sequence</span><output id="studySeconds">0.0 / 24 s</output></div>
+    <div id="studyCues"></div>
+  </div>
+  <details><summary>Pattern rules</summary><p id="studyDetail"></p>
+    <p id="studyNote" class="note"></p>
+  </details>
+  <p><a href="docs/choreography-design-guide.md">Read the design guide ↗</a> · <a href="docs/reference/official/catalog.md">Browse source inventory ↗</a> · <a href="index.html">Back to clock</a></p>
+</aside>
 <footer id="toolbar" class="bottom" hidden>
   <div class="bottom-left">
-    <div class="current"><span id="sequenceNumber"></span><span class="track"><i id="progress"></i></span><span id="sceneName">Radial ripples</span></div>
+    <div class="current"><span id="sequenceNumber"></span><span class="track"><i id="progress"></i></span><span id="sceneName">Radial release</span></div>
     <div class="transport"><button id="timeButton" class="quiet">Time</button><button id="pause" class="quiet" aria-label="Pause animation">Pause</button><button id="next" class="quiet" aria-label="Next sequence">Next ↗</button></div>
   </div>
   <button id="settings" class="quiet" aria-expanded="false" aria-controls="panel">Controls</button>
 </footer>
 <script>
 /*
- * Independent study of Humans since 1982's motion language. No original software or
- * assets are used. The 18 × 8 layout follows AMT144; choreography is independently authored.
+ * Independent choreography informed by public references; no original software is used.
+ * The research archive attributes its source images. Rendering itself is procedural.
  * Pattern owns poses; Score owns unwrapped per-hand trajectories; Director owns
  * sequencing. Rendering never changes hand geometry to manufacture a pattern.
  */
@@ -197,7 +248,15 @@ const ClockCore = (() => {
     {id:'rings',label:'Rings',angles:c=>line(c.phi+PI/2)},
     {id:'diamond',label:'Diamond',angles:c=>line(Math.atan2(Math.sign(c.y),Math.sign(c.x))+PI/2)},
     {id:'wave',label:'Wave',angles:c=>line(.75*Math.sin(c.col*.42+c.row*.32))},
-    {id:'weave',label:'Weave',angles:c=>line((c.col+c.row)%2?PI/4:-PI/4)},
+    {id:'weave',label:'Weave',
+      rule:"Four clocks form a woven loop at a fixed 135° opening. The pattern stays still after its entrance.",
+      detail:"The opening pose of the former Weave animation. Groups of four clocks are offset by one column, leaving half loops at both edges so the weave appears to continue beyond the frame.",
+      angles:c=>{
+      // Freeze the former four-clock weave at its initial opening. The column
+      // offset retains the half loops that extend beyond both side edges.
+      const inward=Math.atan2(.5-c.row%2,c.col%2-.5);
+      return [inward+3*PI/8,inward-3*PI/8];
+    }},
     {id:'fan',label:'Fan',angles:c=>line(Math.atan2(c.y+6,c.x)+PI/2)},
     {id:'parallel',label:'Parallel',angles:()=>line(0)}
   ];
@@ -396,58 +455,132 @@ const ClockCore = (() => {
       });
     }
   }
-  const repertoire = [
-    ['Radial ripples','radial',0],['Parallel tides','tide',0],['Counter-rotation','counter',0],['Column sweep','sweep',0],
-    ['Concentric breathing','breathe',0],['Diagonal drift','diagonal',0],['Mirrored vortex','vortex',0],['Folding fan','fan',0],
-    ['Checkerboard','checker',0],['Standing waves','standing',0],['Radial echoes','radial',1],['Double waves','tide',1],
-    ['Center bloom','sweep',1],['Diamond ripples','breathe',1],['Herringbone','diagonal',1],
-    ['Twin vortices','vortex',1],['Wind field','fan',1],['Weave','weave',0],['Convergence','standing',1]
+  // Each piece owns its motion rule and inspection notes. The direction fields
+  // compile to the same bounded Score used for text and static poses.
+  const studies = [
+    {id:'counter-rotation',label:'Counter-rotation',
+      rule:"Both hands counter-rotate at a constant speed, with fixed phase offsets across rows and columns.",
+      detail:"A fixed bisector keeps the chevron bands readable. Every clock shares the same speed; spatial phase offsets organize the bands.",
+      cues:[["Opening",0],["Interleaved folds",8],["Reverse opening",16]],
+      field:(c,t,j)=>(j===0?1:-1)*(t*.48+c.col*.19+c.row*.12)+PI*j},
+    {id:'column-sweep',label:'Column sweep',
+      rule:"The hands stay in a straight line as rotation shifts across columns, sweeping a wave across the matrix.",
+      detail:"The direction gradient between columns defines the main wave. Small oscillations across rows give it depth. The two hands always remain 180° apart.",
+      cues:[["Column gradient",0],["Wave sweep",8],["Next phase",16]],
+      field:(c,t,j)=>PI*j+.53*t-c.col*.27+.25*Math.sin(t*.4-c.row*.45)},
+    {id:'checkerboard',label:'Checkerboard',
+      rule:"Four clocks form each tile. Adjacent tiles take turns tightening, opening, and turning.",
+      detail:"Opening and turning are offset by a quarter cycle, keeping adjacent tiles distinct as they exchange roles. The four clocks within each tile retain rotational symmetry.",
+      cues:[["Checker tiles",0],["Role exchange",8],["Alternating turns",16]],
+      field:(c,t,j)=>{
+        // Opening and turning contrast are a quarter cycle apart, so neighboring
+        // tiles stay distinct while bounded row/column offsets change the leader.
+        const col=Math.floor(c.col/2)%2?-1:1,row=Math.floor(c.row/2)%2?-1:1,parity=col*row;
+        const beat=t*.48+.4*col*Math.sin(t*.21)+.4*row*Math.cos(t*.17);
+        const inward=Math.atan2(.5-c.row%2,.5-c.col%2);
+        const turn=.3*Math.sin(t*.18)+parity*.55*Math.sin(beat);
+        const opening=PI/4+parity*.67*Math.cos(beat);
+        return inward+turn+(j===0?1:-1)*opening;
+      }},
+    {id:'twin-vortices',label:'Twin vortices',
+      rule:"Two vortices rotate and open together, each around its own center.",
+      detail:"The local centers sit 4.5 cells to either side of the matrix center. Directions vary with each local radius, preserving two recognizable vortices.",
+      cues:[["Twin centers",0],["Vortices open",8],["Vortices turn",16]],
+      field:(c,t,j)=>{
+        const x=c.x+(c.x<0?4.5:-4.5),r=Math.hypot(x,c.y);
+        return Math.atan2(c.y,x)+PI/2+j*PI+(j===0?1:-1)*.38*t+r*.24+.6*Math.sin(r*.5-t*.4);
+      }},
+    {id:'mirrored-vortex',label:'Mirrored vortex',
+      rule:"Mirrored spirals counter-rotate across one central axis. Each pair of hands stays straight.",
+      detail:"Both halves share a central focus. The right field twists with radius; the left reflects it exactly. Opposite rotation preserves curved flow lines, giving this piece a different structure from the two local centers of Twin vortices.",
+      cues:[["Mirrored spirals",0],["Interleaved turn",8],["Arms turn",16]],
+      field:(c,t,j)=>{
+        // Reflect the complete right-hand field, including each hand's identity.
+        // One shared focus and straight pairs make the counterflow readable.
+        const angle=Math.atan2(c.y,Math.abs(c.x))+PI/2+j*PI-.42*c.r+.45*t;
+        return c.x<0?PI-angle:angle;
+      }},
+    {id:'concentric-breathing',label:'Concentric breathing',
+      rule:"Rings, inward folds, rings, outward folds: the whole matrix shares one slow breath.",
+      detail:"Directions follow the circular center, while the opening changes only with time. With no radial delay, every ring contracts and expands together, slowing naturally at each reversal.",
+      cues:[["Concentric rings",0],["Fold inward",5.95],["Open again",11.9],["Fold outward",17.85]],
+      field:(c,t,j)=>c.phi+PI/2+j*PI+(j===0?1:-1)*1.4*Math.sin(.48*t)},
+    {id:'diamond-ripples',label:'Diamond ripples',
+      rule:"Folds travel outward along diamond-shaped contours, keeping crisp edges across all four quadrants.",
+      detail:"Directions follow four diagonal axes, and propagation uses the distance |x| + |y|. Clocks on the same diamond move together; successive diamonds are offset to carry the folds outward.",
+      cues:[["Diamond contours",0],["Travel outward",8],["Next wave",16]],
+      field:(c,t,j)=>{
+        const axis=Math.atan2(Math.sign(c.y),Math.sign(c.x)),radius=Math.abs(c.x)+Math.abs(c.y);
+        return axis+PI/2+j*PI+(j===0?1:-1)*1.4*Math.sin(.68*radius-.55*t);
+      }}
   ];
-  function fieldFor(family,variant) {
-    return (c,t,j) => {
-      const sign=j===0?1:-1,phase=variant?PI/2:0,rad=variant?Math.abs(c.x)*.7+Math.abs(c.y):c.r;
-      switch(family) {
-        case 'radial': return c.phi+PI/2+j*PI+sign*(1.05*Math.sin(rad*.66-t*.48+phase)+.14*t);
-        case 'tide': {
-          // Parallel tides moves each opposing pair as one axis; only Double waves opens the hands.
-          const handPhase=variant?j*.35:0;
-          return .58*t+c.col*.21+PI*j+.65*Math.sin(c.col*.35-c.row*(variant?.5:0)-t*.36+handPhase);
-        }
-        case 'counter': return sign*(t*.48+c.col*.19+c.row*.12)+PI*j;
-        case 'sweep': return PI*j+.53*t-(variant?c.r*.36:c.col*.27)+.25*Math.sin(t*.4-c.row*.45);
-        case 'breathe': return c.phi+PI/2+j*PI+sign*1.34*Math.sin(rad*.68-t*.45+phase);
-        case 'diagonal': return (variant&&c.row%2?-1:1)*(.47*t-c.col*.3-c.row*.43)+j*PI+sign*.35*Math.sin(t*.3);
-        case 'vortex': {
-          const x=variant?c.x+(c.x<0?4.5:-4.5):c.x,y=c.y;
-          return Math.atan2(y,x)+PI/2+j*PI+sign*.38*t+Math.hypot(x,y)*.24+.6*Math.sin(Math.hypot(x,y)*.5-t*.4);
-        }
-        case 'fan': return Math.atan2(c.y+6,c.x)+PI/2+j*PI+sign*(.8*Math.sin(t*.45+c.col*.13)+.25*Math.sin(c.row*.4-t*.3+phase));
-        case 'weave': {
-          // Four clocks outline one loop; all loops share the same opening.
-          // Offset the columns so half loops continue through both side edges.
-          const inward=Math.atan2(.5-c.row%2,c.col%2-.5);
-          const opening=3*PI/8+PI/8*Math.sin(t*.48);
-          return inward+sign*opening;
-        }
-        case 'checker': {
-          // Four clocks form a tile. Opening and turning contrast alternate a
-          // quarter cycle apart, keeping neighbors distinct as their shapes trade.
-          // Bounded row/column phase offsets change which group leads the phrase.
-          const col=Math.floor(c.col/2)%2?-1:1,row=Math.floor(c.row/2)%2?-1:1,parity=col*row;
-          const beat=t*.48+.4*col*Math.sin(t*.21)+.4*row*Math.cos(t*.17);
-          const inward=Math.atan2(.5-c.row%2,.5-c.col%2);
-          const turn=.3*Math.sin(t*.18)+parity*.55*Math.sin(beat);
-          const opening=PI/4+parity*.67*Math.cos(beat);
-          return inward+turn+sign*opening;
-        }
-        default: return j*PI+1.3*Math.sin(c.col*(variant?.3:.5)+phase)*Math.cos(t*.4)+sign*.55*Math.sin(c.row*.5-t*.42);
-      }
-    };
+  // Integral of smoothstep velocity: a delayed wave starts with zero velocity and
+  // acceleration and becomes uniform rotation. Time here uses fieldTempo units.
+  function travellingTurn(t) {
+    const ramp=3;
+    if(t<=0) return 0;
+    if(t>=ramp) return t-ramp/2;
+    const u=t/ramp;return ramp*(u**3-u**4/2);
   }
+  // Reference evidence and motion stay intact when the independent catalog is curated.
+  const references = [
+    {id:'radial',label:'Radial release',evidence:"Continuous video",
+      rule:"Orient each pair around the center, counter-rotate the hands, and stagger their starts by radius.",
+      detail:"Concentric rings, arrows, and radial lines share one center. Their changing shapes come from the opening angle and propagation delay, rather than random hand speeds.",
+      source:'AMT120 Black · V04 · 12–36 s',url:'https://www.humanssince1982.com/products/a-million-times-120-black',image:'radial.jpg',
+      cues:[["Rings open",0,'radial-start.jpg'],["Radial wave",8],["Inward to outward",17]],
+      field:(c,t,j)=>c.phi+PI+(j===0?1:-1)*(PI/2-.82*travellingTurn(t+1.5-c.r*.65))},
+    {id:'columns',label:'Parallel column wave',evidence:"Continuous video",
+      rule:"Keep the hands 180° apart and each column aligned. Adjacent columns start with a delay.",
+      detail:"V13 measurements show about 12° of difference per column. The right side retains its diagonal alignment until it starts, making the wave front easy to follow.",
+      source:'AMT144 Black · V13 · 12–36 s',url:'https://www.humanssince1982.com/products/a-million-times-144-black',image:'columns.jpg',
+      cues:[["Diagonal base",0,'columns-start.jpg'],["Wave advances",7],["Full flow",17]],
+      field:(c,t,j)=>-PI/4+PI*j+.78*travellingTurn(t+1-c.col*.28)},
+    {id:'scissors',label:'Scissor wave',evidence:"Continuous video",
+      rule:"Fix a horizontal bisector and counter-rotate the hands, with phase offsets between columns.",
+      detail:"Straight lines open into chevrons, fold into overlapping hands, and unfold on the other side. Delaying the same movement across columns creates readable continuous bands.",
+      source:'AMT61c Zephyr · V21 · 12–40 s',url:'https://www.humanssince1982.com/products/a-million-times-61c-zephyr',image:'scissors.jpg',
+      cues:[["Horizontal overlap",0,'scissors-start.jpg'],["Chevron bands",7],["Turnover",16]],
+      field:(c,t,j)=>(j===0?1:-1)*(.74*travellingTurn(t+1-c.col*.3))},
+    {id:'tiles',label:'Four-clock lattice',evidence:"Continuous video",
+      rule:"Arrange four clocks around each local center. Every group shares one continuous opening angle.",
+      detail:"Squares, diamonds, and stars emerge along one continuous trajectory. A one-column offset leaves half groups at both edges, extending the pattern beyond the frame.",
+      source:'AMT96 Bjarke Ingels · V11 · 12–40 s',url:'https://www.humanssince1982.com/products/a-million-times-96-bjarke-ingels',image:'tiles.jpg',
+      cues:[["Diamond lattice",0,'tiles-diamond.jpg'],["Squares",3.17],["Gather inward",6.35,'tiles-star.jpg'],["Stars",19.04,'tiles-star.jpg']],
+      field:(c,t,j)=>Math.atan2(.5-c.row%2,c.col%2-.5)+(j===0?1:-1)*(PI/2-.45*t)},
+    {id:'diagonal',label:'Diagonal chevron wave',evidence:"Partial video · Approximation",
+      rule:"Accumulate phase across both rows and columns as the hands open around a shared diagonal axis.",
+      detail:"Chevron bands cross multiple clocks in the official performance excerpt. Editing and occlusion hide the full cycle; this reconstruction follows the visible diagonal propagation.",
+      source:'Official Projects · V08 · 4–10 s',url:'https://www.humanssince1982.com/pages/projects',image:'diagonal.jpg',
+      cues:[["Diagonal bands",0],["Alternating folds",8],["Reverse chevrons",16]],
+      field:(c,t,j)=>-PI/4+(j===0?1:-1)*(PI/2+c.col*.24+c.row*.38-.68*t)},
+    {id:'rows',label:'Parallel row fan',evidence:"Photograph · Inferred motion",
+      rule:"Repeat one straight orientation across each row, changing the angle evenly from row to row.",
+      detail:"The 72v photograph reads as a fan even though every pivot stays fixed. Parallel hands within each row create a curved surface through their direction gradient. The photograph does not establish rotation direction or timing.",
+      source:'AMT72v Black · P021',url:'https://www.humanssince1982.com/products/a-million-times-72v-black',image:'rows.jpg',
+      cues:[["Reference pose",0],["Turn 45°",5.71],["Turn 90°",11.42]],
+      field:(c,t,j)=>-1.39+c.row*(2.55/(ROWS-1))+PI*j+.25*t},
+    {id:'multi',label:'Repeated radial wave',evidence:"Partial video · Approximation",
+      rule:"Repeat local centers across the wide matrix to create multiple regions of radial opening.",
+      detail:"The Changi film shows adjacent wave regions and chevrons around 1:44–1:45. This reconstruction preserves repeated centers and grouped openings; their exact coordinates and timing cannot be recovered from that shot.",
+      source:'A Million Times at Changi · 1:45',url:'https://www.youtube.com/watch?v=d2dUlZjuGj0&t=105s',image:'multi.jpg',
+      cues:[["Repeated regions",0],["Wave advances",8],["Directions shift",16]],
+      field:(c,t,j)=>{
+        const x=mod(c.col+.5,COLS/2)-COLS/4;
+        return Math.atan2(c.y,x)+PI+(j===0?1:-1)*(PI/2-.7*t+.32*Math.hypot(x,c.y));
+      }},
+    {id:'scissors-diagonal',label:'Oblique scissor wave',evidence:"Partial video · Approximation",
+      rule:"Synchronize each column as the hands open around a diagonal bisector, with phase offsets between columns.",
+      detail:"At 33–41 s, the 96 Copper film shows diagonal chevrons using the scissor-wave rule with its axis pointing upper-left. The return to digits begins after 44 s; its mixed poses are part of that return.",
+      source:'AMT96 Copper · 0:33–0:41',url:'https://www.youtube.com/watch?v=np7Yz-XALRI&t=33s',image:'scissors-diagonal.jpg',
+      cues:[["Diagonal overlap",0],["Staggered opening",7],["Continuous turn",16]],
+      field:(c,t,j)=>-3*PI/4+(j===0?1:-1)*(.74*travellingTurn(t+1-c.col*.3))}
+  ];
+  const repertoire = references.concat(studies);
   function buildPerformance(states,index,flowSeconds=MOTION.flowSeconds,formation=null) {
-    const [,family,variant]=repertoire[index],score=new Score(states).mark('Transition');
+    const score=new Score(states).mark('Transition');
     if(formation!==null) score.passage(formation);
-    score.field(fieldFor(family,variant),flowSeconds);
+    score.field(repertoire[index].field,flowSeconds);
     score.marks.push({at:score.duration-flowSeconds,label:'Flow'});
     return score;
   }
@@ -497,13 +630,26 @@ const ClockCore = (() => {
       if(mode==='exhibition') this.start(now);else this.showTime(now);
     }
     start(now) {
-      this.label=repertoire[this.index][0];this.deadline=0;
+      this.label=repertoire[this.index].label;this.deadline=0;
       const formation=this.needsPassage('pattern')?this.formationIndex:null;
       this.play(buildPerformance(this.states,this.index,MOTION.flowSeconds,formation),'performance','pattern');
     }
-    next(now) {this.select((this.index+1)%repertoire.length,now);}
+    nextIndex() {
+      const start=this.index<references.length?0:references.length;
+      const count=this.index<references.length?references.length:studies.length;
+      return start+mod(this.index-start+1,count);
+    }
+    next(now) {this.select(this.nextIndex(),now);}
     select(index,now) {
       this.index=index;this.mode='exhibition';this.changeRate(this.speed);this.start(now);
+    }
+    // Scrubbing is an explicit inspection jump. Resuming follows the same score,
+    // retaining its velocities instead of rebuilding from a fabricated rest pose.
+    inspectFlow(seconds,now=Date.now()) {
+      if(this.phase!=='performance') this.select(this.index,now);
+      const start=this.score.marks.find(m=>m.label==='Flow').at;
+      this.paused=true;this.elapsed=start+clamp(seconds,0,this.score.duration-start);
+      this.states=this.score.sample(this.elapsed);
     }
     showTime(now) {this.deadline=0;this.returnTime(now,6,false);}
     showPose(pose,label,kind='pattern') {
@@ -533,7 +679,7 @@ const ClockCore = (() => {
     }
     startTimed(now) {
       const minute=Math.floor(now/60000),deadline=(minute+1)*60000,available=(deadline-now)/1000;
-      this.lastCycle=minute;this.index=this.mode==='original'?0:mod(minute,repertoire.length);
+      this.lastCycle=minute;this.index=this.mode==='original'?0:mod(minute,references.length);
       const target=this.currentText(deadline);let selected=null;
       for(let flow=MOTION.flowSeconds;flow>=2;flow-=2) {
         const score=buildPerformance(this.states,this.index,flow,this.formationIndex)
@@ -545,7 +691,7 @@ const ClockCore = (() => {
       const score=selected||new Score(this.states).pose(textPose(target,true));
       if(score.duration>available) return false;
       score.prependHold(available-score.duration);
-      this.targetTime=target;this.deadline=deadline;this.label=selected?repertoire[this.index][0]:'Local time';
+      this.targetTime=target;this.deadline=deadline;this.label=selected?repertoire[this.index].label:'Local time';
       this.play(score,selected?'scheduled':'minute',selected?'pattern':'text');return true;
     }
     resume(now) {
@@ -583,7 +729,7 @@ const ClockCore = (() => {
         else if(this.phase==='return'&&this.thenNext) this.play(new Score(this.states).hold(CLOCK_HOLD_SECONDS),'holding');
         else if(this.timed) this.play(new Score(this.states).hold(CLOCK_HOLD_SECONDS),'clock');
         else this.planMinute(now);
-      } else if(this.phase==='holding') {this.index=(this.index+1)%repertoire.length;this.start(now);}
+      } else if(this.phase==='holding') {this.index=this.nextIndex();this.start(now);}
     }
     tick(dt,now) {
       if(this.paused) return;
@@ -608,7 +754,7 @@ const ClockCore = (() => {
       }
     }
   }
-  return {TAU,PI,COLS,ROWS,COUNT,PARK,cells,tiles,glyphs,wrap,mod,clamp,textPose,timeText,pattern,patterns,formations,destination,MOTION,Segment,Score,repertoire,fieldFor,buildPerformance,Director};
+  return {TAU,PI,COLS,ROWS,COUNT,PARK,cells,tiles,glyphs,wrap,mod,clamp,textPose,timeText,pattern,patterns,formations,destination,MOTION,Segment,Score,repertoire,references,studies,buildPerformance,Director};
 })();
 
 /* Canvas is a projection only. Director is also executable in Node for numerical
@@ -616,12 +762,16 @@ const ClockCore = (() => {
 (() => {
   const C=ClockCore,$=id=>document.getElementById(id),canvas=$('clock'),ctx=canvas.getContext('2d');
   const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const params=new URLSearchParams(location.search),studying=params.get('study')==='1';
+  if(studying) document.body.classList.add('study');
   const player=new C.Director(Date.now(),reduced?'minimal':'exhibition');
-  let lastStamp=null,hidden=document.hidden,cssWidth=0,cssHeight=0,unit=0,dpr=0,lastUi=0;
+  let lastStamp=null,hidden=document.hidden,cssWidth=0,cssHeight=0,unit=0,dpr=0,lastUi=0,lastPiece=-1;
   function resize() {
     dpr=Math.min(window.devicePixelRatio||1,3);
-    const w=innerWidth,h=innerHeight,padding=w<600?22:Math.max(52,w*.055);
-    unit=Math.max(1,Math.min((w-2*padding)/C.COLS,(h-(h<420?102:190))/C.ROWS));
+    const {width:w,height:h}=canvas.parentElement.getBoundingClientRect();
+    // Centered margins are each at least 8%. Their normalized sum is
+    // 2 - unit * (COLS / w + ROWS / h), and must remain at least 50%.
+    unit=Math.min(.84*w/C.COLS,.84*h/C.ROWS,1.5/(C.COLS/w+C.ROWS/h));
     cssWidth=unit*C.COLS;cssHeight=unit*C.ROWS;
     canvas.style.width=cssWidth+'px';canvas.style.height=cssHeight+'px';
     canvas.width=Math.round(cssWidth*dpr);canvas.height=Math.round(cssHeight*dpr);render();
@@ -645,10 +795,16 @@ const ClockCore = (() => {
       ctx.fill();
     }
   }
+  function showReferenceImage(piece,file=piece.image) {
+    const src='docs/reference/official/'+file;
+    $('referenceImage').src=src;$('referenceImageLink').href=src;
+    $('referenceImage').alt=piece.source+" · Official reference";
+  }
   function updateUi() {
     const performing=['performance','scheduled'].includes(player.phase),p=player;
-    $('sceneName').textContent=performing?C.repertoire[p.index][0]:p.phase==='return'?'Returning to time':p.label;
-    $('sequenceNumber').textContent=performing?String(p.index+1).padStart(2,'0')+' / '+C.repertoire.length:String(C.COUNT);
+    $('sceneName').textContent=performing?C.repertoire[p.index].label:p.phase==='return'?'Returning to time':p.label;
+    const reference=p.index<C.references.length,count=reference?C.references.length:C.studies.length;
+    $('sequenceNumber').textContent=performing?String(p.index+1-(reference?0:C.references.length)).padStart(2,'0')+' / '+count:String(C.COUNT);
     $('progress').style.transform='scaleX('+Math.min(p.elapsed/p.score.duration,1)+')';
     $('mode').value=p.mode;$('choreography').value=String(p.index);
     $('speed').disabled=p.timed;$('speed').value=String(p.timed?1:p.speed);$('speedValue').textContent=(p.timed?1:p.speed)+'×'+(!p.timed&&p.speed>1?' · Debug':'');
@@ -657,8 +813,47 @@ const ClockCore = (() => {
     $('pause').setAttribute('aria-label',p.paused?'Resume animation':'Pause animation');
     canvas.setAttribute('aria-label',['clock','holding','opening','minute'].includes(p.phase)?'Clock '+p.currentText(Date.now()).replace(/(..)(..)/,'$1:$2'):C.COUNT+' two-hand clocks: '+$('sceneName').textContent);
     canvas.dataset.phase=p.phase;
+    const piece=C.repertoire[p.index];
+    $('studyEntry').href='?study=1&piece='+piece.id;
+    if(studying) {
+      const manual=p.phase==='manual',key=manual?p.label:p.index;
+      if(lastPiece!==key) {
+        lastPiece=key;
+        const display=manual?C.patterns.find(pattern=>pattern.label===p.label):piece;
+        $('studySelect').value=manual?'':String(p.index);
+        $('studyTitle').textContent=manual?p.label:piece.label;
+        $('studyKind').textContent=manual?(p.kind==='text'?"Static text":"Static pattern"):(piece.evidence||"Selected independent study");
+        $('studyRule').textContent=display?.rule||"This display stays still after its entrance. Choose a sequence to continue the animation.";
+        $('studyDetail').textContent=display?.detail||"This manual display is excluded from automatic playback.";
+        $('studyMotion').hidden=manual;
+        $('studyReference').hidden=manual||!piece.image;
+        $('studyNote').textContent=!manual&&reference
+          ?"Names are descriptive labels created for this project. Photographs establish composition; partial footage cannot establish a full timeline. The slider follows the reconstructed sequence, not the source timecode."
+          :"An independent pattern designed for this project.";
+        if(!manual&&piece.image) {
+          showReferenceImage(piece,piece.cues[0][2]||piece.image);
+          $('referenceLink').textContent=piece.source+' ↗';$('referenceLink').href=piece.url;
+        }
+        $('studyCues').replaceChildren();
+        for(const [label,seconds,file] of manual?[]:piece.cues) {
+          const button=document.createElement('button');button.textContent=label;
+          button.addEventListener('click',()=>{
+            act(()=>player.inspectFlow(seconds));
+            if(piece.image) showReferenceImage(piece,file||piece.image);
+          });
+          $('studyCues').append(button);
+        }
+      }
+      const start=p.score.marks.find(m=>m.label==='Flow')?.at;
+      const seconds=p.phase==='performance'&&start!==undefined?C.clamp(p.elapsed-start,0,C.MOTION.flowSeconds):0;
+      $('studySeek').value=String(seconds);$('studySeconds').textContent=seconds.toFixed(1)+' / 24 s';
+    }
   }
-  function act(action) {action();updateUi();}
+  function act(action) {
+    const index=player.index;action();
+    if(studying&&player.paused&&player.index!==index&&player.phase==='performance') player.inspectFlow(0);
+    updateUi();
+  }
   function playPause() {
     player.paused=!player.paused;lastStamp=null;
     if(!player.paused) player.resume(Date.now());updateUi();
@@ -671,9 +866,17 @@ const ClockCore = (() => {
     if(stamp-lastUi>125) {lastUi=stamp;updateUi();}
     requestAnimationFrame(frame);
   }
-  C.repertoire.forEach(([label],i)=>{
-    const option=document.createElement('option');option.value=String(i);option.textContent=String(i+1).padStart(2,'0')+' · '+label;$('choreography').append(option);
-  });
+  for(const id of ['choreography','studySelect']) {
+    let group;
+    C.repertoire.forEach((piece,i)=>{
+      if(i===0||i===C.references.length) {
+        group=document.createElement('optgroup');
+        group.label=i===0?'Reference reconstructions':'Independent studies';$(id).append(group);
+      }
+      const option=document.createElement('option');option.value=String(i);
+      option.textContent=piece.label;group.append(option);
+    });
+  }
   const panelButtons={panel:'settings',aboutPanel:'about'};
   function closePanels(restoreFocus=false) {
     let trigger=null;
@@ -707,6 +910,10 @@ const ClockCore = (() => {
   });
   $('mode').addEventListener('change',e=>act(()=>player.setMode(e.target.value,Date.now())));
   $('choreography').addEventListener('change',e=>act(()=>player.select(Number(e.target.value),Date.now())));
+  $('studySelect').addEventListener('change',e=>act(()=>{
+    player.select(Number(e.target.value),Date.now());player.inspectFlow(0);
+  }));
+  $('studySeek').addEventListener('input',e=>act(()=>player.inspectFlow(Number(e.target.value))));
   $('speed').addEventListener('input',e=>act(()=>player.setSpeed(Number(e.target.value),Date.now())));
   $('format').addEventListener('change',e=>act(()=>{player.hour12=e.target.value==='12';player.showTime(Date.now());}));
   $('timeButton').addEventListener('click',()=>act(()=>player.showTime(Date.now())));
@@ -741,6 +948,13 @@ const ClockCore = (() => {
   });
   document.addEventListener('visibilitychange',()=>{hidden=document.hidden;lastStamp=null;if(!hidden&&!player.paused) player.resume(Date.now());});
   window.addEventListener('resize',resize);
+  if(studying) {
+    const requested=C.repertoire.findIndex(p=>p.id===params.get('piece'));
+    player.select(Math.max(0,requested),Date.now());
+    const seconds=Number(params.get('at')||0);
+    player.inspectFlow(Number.isFinite(seconds)?seconds:0);
+    $('toolbar').hidden=false;
+  }
   resize();updateUi();requestAnimationFrame(frame);
 })();
 </script>
