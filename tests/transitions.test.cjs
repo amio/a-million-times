@@ -120,6 +120,17 @@ test('3x debugging remains available and scales an already bounded timeline',()=
 });
 
 const passages=score=>score.marks.filter(m=>m.formation!==undefined);
+function checkPassage(score,mark) {
+  for(const c of C.cells) {
+    const at=mark.at+(mark.sweep===null?0:C.sweeps[mark.sweep].phase(c)*C.MOTION.sweepSeconds);
+    for(let j=0;j<2;j++) {
+      const h=2*c.i+j,state=score.sample(at)[h];
+      near(C.wrap(state[0]-C.formations[mark.formation].angle-j*Math.PI),0);
+      near(Math.abs(state[1]),.14);near(state[2],0);
+      for(const t of [at-.1,at,at+.1]) assert.ok(Math.abs(score.sample(t)[h][1])>.1);
+    }
+  }
+}
 
 test('the nine static patterns remain independent resting manual displays',()=>{
   const poses=C.patterns.map(p=>C.pattern(p.id));
@@ -158,13 +169,36 @@ test('dedicated formations align all hands on four straight axes without dwellin
   }
 });
 
-test('repeated letter strokes move together while gathering into every formation',()=>{
-  for(let i=0;i<C.formations.length;i++) {
-    const initial=states('0935'),score=new C.Score(initial).passage(i);
+test('all six sweeps leave typography in spatial order and cross every formation without stopping',()=>{
+  const order={
+    'top-to-bottom':c=>c.row,'bottom-to-top':c=>-c.row,
+    'left-to-right':c=>c.col,'right-to-left':c=>-c.col,
+    'center-out':c=>Math.hypot(c.x,c.y),'edges-in':c=>-Math.hypot(c.x,c.y)
+  };
+  assert.deepEqual(Array.from(C.sweeps,s=>s.id),Object.keys(order));
+  for(let sweep=0;sweep<C.sweeps.length;sweep++) for(let i=0;i<C.formations.length;i++) {
+    const initial=states('0935'),score=new C.Score(initial).passage(i,sweep);
+    check(score);checkPassage(score,passages(score)[0]);
+    const starts=C.cells.map(c=>{
+      const onset=[0,1].map(j=>score.tracks[2*c.i+j].find(s=>s.to[1]!==0).start);
+      near(onset[0],onset[1]);
+      for(const t of [0,onset[0]/2,onset[0]]) for(let j=0;j<2;j++) {
+        score.sample(t)[2*c.i+j].forEach((v,k)=>near(v,initial[2*c.i+j][k]));
+      }
+      return {cell:c,at:onset[0]};
+    }).sort((a,b)=>order[C.sweeps[sweep].id](a.cell)-order[C.sweeps[sweep].id](b.cell));
+    near(starts[0].at,0);near(starts.at(-1).at,C.MOTION.sweepSeconds);
+    for(let n=1;n<starts.length;n++) {
+      const a=starts[n-1],b=starts[n];
+      if(order[C.sweeps[sweep].id](a.cell)===order[C.sweeps[sweep].id](b.cell)) near(a.at,b.at);
+      else assert.ok(a.at<b.at,`${C.sweeps[sweep].id} must propagate in spatial order`);
+    }
+    const midway=score.sample(C.MOTION.sweepSeconds/2);
+    assert.ok(midway.some((s,h)=>Math.abs(s[0]-initial[h][0])>.01),'The leading region must visibly leave the time while the trailing region waits.');
     for(const fraction of [.15,.5,.85]) {
       const groups=new Map(),at=score.sample(score.duration*fraction);
       initial.forEach((s,h)=>{
-        const key=`${h%2}:${s[0]}`;
+        const key=`${h%2}:${s[0]}:${order[C.sweeps[sweep].id](C.cells[Math.floor(h/2)])}`;
         if(groups.has(key)) at[h].forEach((v,j)=>near(v,groups.get(key)[j]));
         else groups.set(key,at[h]);
       });
@@ -178,6 +212,7 @@ test('Director organizes only text-to-pattern departures and returns directly',(
     action();check(p.score);
     const marks=passages(p.score);
     assert.deepEqual(Array.from(marks,m=>m.formation),expected);
+    assert.ok(marks.every(m=>m.sweep===0));
     p.states=p.score.sample(p.score.duration);
   };
   route(()=>p.showPose(C.pattern('rings'),'rings'),[0]);
@@ -191,55 +226,82 @@ test('Director organizes only text-to-pattern departures and returns directly',(
   assert.equal(p.formationIndex,3);
 });
 
-test('random choices skip immediate repeats and survive direct routes and failed plans',()=>{
-  const draws=[.6,.8,.1,.5,.999];let calls=0;
+test('random formation and sweep choices survive direct routes, clock-only fallbacks and failed plans',()=>{
+  const draws=[.6,.8, .8,.1, .1,.5, .5,.999, .999,0];let calls=0;
   const p=new C.Director(now,'exhibition',()=>draws[calls++]);
-  const first=p.formationIndex;
-  assert.equal(calls,1);
+  const first=p.formationIndex,firstSweep=p.sweepIndex;
+  assert.equal(calls,2);
   assert.equal(p.startTimed(now+59999),false);
-  assert.equal(p.formationIndex,first);assert.equal(calls,1,'A failed plan must keep its cached draw.');
-  const used=[];
+  assert.equal(p.formationIndex,first);assert.equal(p.sweepIndex,firstSweep);
+  assert.equal(calls,2,'A failed plan must keep both cached draws.');
+  assert.ok(p.startTimed(now+50000));assert.equal(p.phase,'minute');
+  assert.equal(p.formationIndex,first);assert.equal(p.sweepIndex,firstSweep);
+  assert.equal(calls,2,'A clock-only fallback must keep both cached draws.');
+  const used=[],usedSweeps=[];
   for(let i=0;i<4;i++) {
     p.showPose(C.textPose('TIME'),'TIME','text');
     p.showTime(now);
-    assert.equal(calls,i+1,'Direct routes must not consume a draw.');
-    const pending=p.formationIndex;
+    assert.equal(calls,2*(i+1),'Direct routes must not consume a draw.');
+    const pending=p.formationIndex,pendingSweep=p.sweepIndex;
     p.showPose(C.pattern('rings'),'Rings');
     assert.deepEqual(Array.from(passages(p.score),m=>m.formation),[pending]);
-    used.push(pending);
-    assert.equal(calls,i+2);assert.notEqual(p.formationIndex,pending);
+    assert.deepEqual(Array.from(passages(p.score),m=>m.sweep),[pendingSweep]);
+    used.push(pending);usedSweeps.push(pendingSweep);
+    assert.equal(calls,2*(i+2));assert.notEqual(p.formationIndex,pending);
     p.showPose(C.pattern('wave'),'Wave');
-    assert.equal(calls,i+2);assert.equal(passages(p.score).length,0);
+    assert.equal(calls,2*(i+2));assert.equal(passages(p.score).length,0);
   }
   assert.deepEqual(used,[2,1,2,0]);
+  assert.deepEqual(usedSweeps,[4,0,3,5]);
 });
 
-test('every minute sequence fits all random formations without redrawing during retries',()=>{
-  for(let i=0;i<C.references.length;i++) for(let index=0;index<C.formations.length;index++) {
+test('every minute sequence fits all six sweeps without redrawing during retries',()=>{
+  for(let i=0;i<C.references.length;i++) for(let sweep=0;sweep<C.sweeps.length;sweep++) {
+    const index=(i+sweep)%C.formations.length;
     const t=new Date(2026,8,5,23,i,6).getTime();let draws=0;
-    const p=new C.Director(t,'active',()=>++draws===1?(index+.5)/C.formations.length:.5);
-    assert.equal(p.formationIndex,index);
+    const p=new C.Director(t,'active',()=>++draws===1?(index+.5)/C.formations.length:draws===2?(sweep+.5)/C.sweeps.length:.5);
+    assert.equal(p.formationIndex,index);assert.equal(p.sweepIndex,sweep);
     assert.ok(p.startTimed(t));
     assert.equal(p.phase,'scheduled',`family ${i}, formation ${index} was replaced by a clock-only update`);
-    assert.equal(draws,2,'Budget retries must reuse the cached formation.');
+    assert.equal(draws,4,'Budget retries must reuse the cached formation and sweep.');
     assert.notEqual(p.formationIndex,index);
     assert.deepEqual(Array.from(passages(p.score),m=>m.formation),[index]);
+    assert.deepEqual(Array.from(passages(p.score),m=>m.sweep),[sweep]);
     near(p.score.duration,54,1e-6);check(p.score);
-    const next=p.formationIndex;
-    for(const mark of passages(p.score)) for(const state of p.score.sample(mark.at)) assert.ok(Math.abs(state[1])>.1);
+    const next=p.formationIndex,nextSweep=p.sweepIndex;
+    for(const mark of passages(p.score)) checkPassage(p.score,mark);
     p.tick(54,t+54000);
-    assert.equal(p.kind,'text');assert.equal(p.formationIndex,next);assert.equal(draws,2);
+    assert.equal(p.kind,'text');assert.equal(p.formationIndex,next);assert.equal(p.sweepIndex,nextSweep);assert.equal(draws,4);
+    const pose=C.textPose(p.currentText(t+54000),true);
+    for(const c of C.cells) {
+      const [a,b]=p.states.slice(2*c.i,2*c.i+2).map(s=>s[0]),[x,y]=pose[c.i];
+      near(Math.min(Math.abs(C.wrap(a-x))+Math.abs(C.wrap(b-y)),Math.abs(C.wrap(a-y))+Math.abs(C.wrap(b-x))),0);
+    }
   }
 });
 
-test('interrupting a formation passage preserves the sampled motion and speed limits',()=>{
-  for(let i=0;i<C.formations.length;i++) {
-    const p=new C.Director(now,'exhibition',()=>0);p.formationIndex=i;p.start(now);
+test('interrupting a directional departure preserves the sampled motion and speed limits',()=>{
+  for(let sweep=0;sweep<C.sweeps.length;sweep++) {
+    const i=sweep%C.formations.length;
+    const p=new C.Director(now,'exhibition',()=>0);p.formationIndex=i;p.sweepIndex=sweep;p.start(now);
     const mark=passages(p.score)[0];p.tick(mark.at,now+mark.at*1000);
     const before=p.states.map(s=>s.slice());p.showTime(now+mark.at*1000);
     assert.equal(passages(p.score).length,0);
     assert.equal(p.formationIndex,(i+1)%C.formations.length);
     p.score.sample(0).forEach((s,h)=>s.forEach((v,j)=>near(v,before[h][j])));
     check(p.score);
+  }
+});
+
+test('departures during moving text retain velocity and acceleration through all six sweeps',()=>{
+  for(let sweep=0;sweep<C.sweeps.length;sweep++) {
+    const p=new C.Director(now,'exhibition',()=>0),source=authored[sweep*2];
+    p.kind='pattern';p.states=source.sample(source.duration-3);p.showTime(now);
+    p.tick(2,now+2000);
+    const before=p.states.map(s=>s.slice());
+    assert.ok(before.some(s=>Math.abs(s[2])>.001));
+    p.sweepIndex=sweep;p.showPose(C.pattern('rings'),'Rings');
+    p.score.sample(0).forEach((s,h)=>s.forEach((v,j)=>near(v,before[h][j])));
+    check(p.score);checkPassage(p.score,passages(p.score)[0]);
   }
 });

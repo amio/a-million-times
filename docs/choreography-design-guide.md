@@ -144,7 +144,7 @@ At 33–41 s in the 96 Copper film, the bisectors lie diagonally and each column
 | Return | Establish a clear destination | Gather into digits while retaining readable structure | Does the destination become clearer as it approaches? |
 | Hold | Complete the phrase | Maintain accurate time | Is there enough stable viewing time? |
 
-In common website clips, the entrance, main movement, and return total about 43–56 seconds. Editing and playback speed may vary, so this is not evidence of a shared schedule for every official program. This project uses a 24-second main movement with time holds; its existing continuous-trajectory system plans entrances and returns. Those surrounding stages and randomly chosen uniform transition formations are project choices and **do not claim frame-by-frame agreement with the source films**.
+In common website clips, the entrance, main movement, and return total about 43–56 seconds. Editing and playback speed may vary, so this is not evidence of a shared schedule for every official program. This project uses a 24-second main movement with time holds; its existing continuous-trajectory system plans entrances and returns. Departures from typography choose a random formation axis and one of six spatial directions, staggering rows, columns, or concentric rings over six seconds at 1×. Minute modes shorten the main movement when the complete route needs more time. These surrounding stages are project choices and **do not claim frame-by-frame agreement with the source films**. [Directional departure design](implemented/directional-departures.md)
 
 ## 6. A practical design process
 

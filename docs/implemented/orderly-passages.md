@@ -1,5 +1,7 @@
 # Moving formation passages
 
+The synchronized full-matrix crossing described here is superseded by [directional departures](directional-departures.md). The four formation axes and outgoing-only routing remain; clocks now cross the selected axis progressively along one of six randomly chosen spatial directions.
+
 ## Context & Goals
 
 Direct transitions between clock typography and spatial fields scatter the letter strokes into unrelated orientations. The user wants an orderly whole-matrix intermediate formation, with several simple, flat formations and no dwell before the following transition. Complex static display patterns do not consistently provide that order; organizing formations now have their own restricted catalog and are selected randomly.

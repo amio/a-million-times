@@ -27,13 +27,16 @@
   .current { display:flex; align-items:center; gap:12px; min-width:0; color:var(--muted); font-size:12px; }
   #sequenceNumber { font-variant-numeric:tabular-nums; flex-shrink:0; }
   #sceneName { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:190px; }
-  .track { width:54px; height:2px; background:var(--line); flex-shrink:0; }
-  #progress { display:block; height:100%; background:var(--muted); transform:scaleX(0); transform-origin:left; }
+  #progress { pointer-events:auto; appearance:none; width:100px; height:24px; margin:0; border:0; flex-shrink:0; cursor:ew-resize; background:linear-gradient(to right,var(--muted) var(--progress,0%),var(--line) var(--progress,0%)) center / 100% 2px no-repeat; }
+  #progress::-webkit-slider-thumb { appearance:none; width:8px; height:8px; border-radius:50%; background:var(--ink); }
+  #progress::-moz-range-thumb { width:8px; height:8px; border:0; border-radius:50%; background:var(--ink); }
+  #progress:disabled { opacity:.4; cursor:default; }
   .transport { display:flex; align-items:center; gap:10px; }
   .transport button { font-size:13px; }
   #settings { flex-shrink:0; }
   .panel { position:fixed; z-index:2; right:32px; width:340px; max-height:calc(100dvh - 154px); overflow:auto; overscroll-behavior:contain; padding:20px; background:rgba(250,250,248,.97); border:1px solid var(--line); border-radius:8px; box-shadow:0 12px 40px #00000008; }
   .control-panel { bottom:78px; }
+  body:has(#panel:not([hidden])) main { right:390px; }
   .about-panel { top:78px; }
   .panel-header { display:flex; align-items:center; justify-content:space-between; margin:-6px -8px 16px 0; gap:16px; }
   .panel-header h2 { margin:0; font-size:14px; font-weight:500; }
@@ -55,39 +58,27 @@
   .patterns button { padding:8px 4px; font-size:12px; border:1px solid var(--line); background:transparent; border-radius:4px; }
   .patterns button:hover,.patterns button[aria-pressed="true"] { border-color:var(--ink); }
   #textError { color:#965039; min-height:18px; font-size:12px; margin-top:5px; }
-  .study-link { display:block; margin-top:14px; color:inherit; text-underline-offset:3px; }
-  #studyPanel { display:none; }
-  body.study main { right:390px; }
-  body.study #studyPanel { display:block; position:fixed; top:88px; right:28px; bottom:96px; width:334px; overflow:auto; padding-right:8px; }
-  #studyPanel .eyebrow { color:var(--muted); font-size:11px; letter-spacing:.1em; }
-  #studyPanel h1 { font-size:24px; font-weight:500; margin:4px 0 8px; }
-  #studyPanel p { color:var(--muted); line-height:1.8; font-size:13px; margin:10px 0; }
-  #studyPanel #studyRule { color:var(--ink); font-size:15px; }
-  #studySelect { width:100%; max-width:none; margin:0 0 10px; }
+  #studyPanel { margin:0 0 18px; }
+  #studyPanel p { color:var(--muted); line-height:1.7; font-size:12px; margin:10px 0; }
+  #studyPanel #studyRule { color:var(--ink); font-size:13px; }
   #referenceImage { width:100%; height:auto; max-height:140px; object-fit:contain; display:block; margin:12px 0 6px; border-radius:3px; }
-  #referenceLink { font-size:12px; color:var(--muted); text-underline-offset:3px; }
+  #referenceLink { font-size:12px; text-underline-offset:3px; }
   #studyPanel details { font-size:12px; color:var(--muted); }
   #studyPanel summary { cursor:pointer; }
-  #studySeek { width:100%; margin:12px 0 4px; }
-  .study-timing { display:flex; justify-content:space-between; font-size:12px; color:var(--muted); }
+  #studyKind { display:block; margin-top:12px; font-size:11px; }
   #studyCues { display:flex; flex-wrap:wrap; gap:6px; margin:8px 0 14px; }
   #studyCues button { background:none; border:1px solid var(--line); border-radius:4px; padding:6px 9px; font-size:12px; }
   #studyPanel .note { font-size:11px; }
   #studyPanel a { color:inherit; }
-  @media(max-width:900px) {
-    body.study { overflow:auto; }
-    body.study main { position:sticky; inset:auto; top:0; z-index:1; height:32vh; min-height:220px; margin-top:64px; background:var(--paper); }
-    body.study .top { position:absolute; }
-    body.study #studyPanel { position:relative; inset:auto; width:auto; max-width:600px; margin:0 auto; padding:0 24px 126px; overflow:visible; }
-    body.study .bottom { background:var(--paper); padding-top:10px; }
-  }
   @media(max-width:600px) {
+    body:has(#panel:not([hidden])) main { right:0; bottom:calc(50dvh + 96px); }
+    .panel.control-panel { max-height:50dvh; }
     .top { inset:18px 18px auto; } .bottom { inset:auto 18px 18px; gap:12px; }
     .bottom-left { flex:1; flex-direction:column; align-items:flex-start; gap:4px; }
     .current { width:100%; gap:7px; } #sceneName { max-width:none; }
     .panel { right:18px; width:min(340px,calc(100vw - 36px)); max-height:calc(100dvh - 160px); }
     .control-panel { bottom:96px; } .about-panel { top:70px; }
-    .transport { gap:0; margin-left:-10px; } .track { width:30px; }
+    .transport { gap:0; margin-left:-10px; } #progress { width:80px; }
   }
   @media(max-height:420px) { .top { top:10px; } .bottom { bottom:8px; } .panel { max-height:calc(100dvh - 116px); } .control-panel { bottom:60px; } .about-panel { top:53px; } }
   @media(prefers-reduced-motion:reduce) { * { scroll-behavior:auto; } }
@@ -103,13 +94,25 @@
   <div class="panel-header"><h2 id="aboutTitle">A Million Times <span class="edition">144</span></h2><button id="closeAbout" class="quiet" aria-label="Close about">×</button></div>
   <p>A tribute to <a href="https://www.humanssince1982.com/" target="_blank" rel="noreferrer">Humans since 1982</a>’s A Million Times, recreating its synchronized clock hands as they form abstract patterns and tell time.</p>
   <a class="source" href="https://github.com/amio/a-million-times" target="_blank" rel="noreferrer">View source ↗</a>
-  <a class="study-link" href="?study=1">Explore the choreography ↗</a>
 </aside>
 <aside id="panel" class="panel control-panel" hidden aria-labelledby="controlsTitle">
   <div class="panel-header"><h2 id="controlsTitle">Controls</h2><button id="closeControls" class="quiet" aria-label="Close controls">×</button></div>
   <div class="row"><label for="mode">Mode</label><select id="mode"><option value="exhibition">Exhibition · Continuous</option><option value="active">Active · Every minute</option><option value="original">Original · Radial</option><option value="minimal">Minimal · Time only</option></select></div>
   <div class="row"><label for="choreography">Sequence</label><select id="choreography"></select></div>
-  <a id="studyEntry" class="study-link" href="?study=1">Explore the choreography ↗</a>
+  <section id="studyPanel" aria-label="Choreography details">
+    <p id="studyRule"></p>
+    <div id="studyCues"></div>
+    <details id="studyDetails"><summary>Rules &amp; references</summary>
+      <span id="studyKind"></span>
+      <div id="studyReference" hidden>
+        <a id="referenceImageLink" target="_blank" rel="noreferrer"><img id="referenceImage" alt="Official reference image and key frames" width="960" height="400"></a>
+        <a id="referenceLink" target="_blank" rel="noreferrer"></a>
+      </div>
+      <p id="studyDetail"></p>
+      <p id="studyNote" class="note"></p>
+      <p><a href="docs/choreography-design-guide.md">Read the design guide ↗</a> · <a href="docs/reference/official/catalog.md">Browse source inventory ↗</a></p>
+    </details>
+  </section>
   <div class="row"><label for="speed">Speed <output id="speedValue">1×</output></label><input id="speed" type="range" min="0.25" max="3" value="1" step="0.25"></div>
   <div class="row"><label for="format">Time format</label><select id="format"><option value="24">24-hour</option><option value="12">12-hour</option></select></div>
   <div class="divider"></div>
@@ -119,31 +122,10 @@
   <div class="label">Static patterns</div>
   <div id="patterns" class="patterns"></div>
 </aside>
-<aside id="studyPanel" aria-label="Choreography study">
-  <div class="eyebrow">A MILLION TIMES · CHOREOGRAPHY</div>
-  <h1 id="studyTitle">Form and motion</h1>
-  <label for="studySelect">Choreography</label>
-  <select id="studySelect"><option value="" disabled hidden>Choose a sequence</option></select>
-  <div class="study-timing"><span id="studyKind">Selected choreography</span><span>18 × 8</span></div>
-  <div id="studyReference" hidden>
-    <a id="referenceImageLink" target="_blank" rel="noreferrer"><img id="referenceImage" alt="Official reference image and key frames" width="960" height="400"></a>
-    <a id="referenceLink" target="_blank" rel="noreferrer"></a>
-  </div>
-  <p id="studyRule"></p>
-  <div id="studyMotion">
-    <label for="studySeek">Timeline · Drag to pause and inspect</label>
-    <input id="studySeek" type="range" min="0" max="24" step="0.05" value="0">
-    <div class="study-timing"><span>Main sequence</span><output id="studySeconds">0.0 / 24 s</output></div>
-    <div id="studyCues"></div>
-  </div>
-  <details><summary>Pattern rules</summary><p id="studyDetail"></p>
-    <p id="studyNote" class="note"></p>
-  </details>
-  <p><a href="docs/choreography-design-guide.md">Read the design guide ↗</a> · <a href="docs/reference/official/catalog.md">Browse source inventory ↗</a> · <a href="index.html">Back to clock</a></p>
-</aside>
+
 <footer id="toolbar" class="bottom" hidden>
   <div class="bottom-left">
-    <div class="current"><span id="sequenceNumber"></span><span class="track"><i id="progress"></i></span><span id="sceneName">Radial release</span></div>
+    <div class="current"><span id="sequenceNumber"></span><input id="progress" type="range" min="0" max="24" step="0.05" value="0" aria-label="Choreography timeline" title="Drag to pause and inspect"><span id="sceneName">Radial release</span></div>
     <div class="transport"><button id="timeButton" class="quiet">Time</button><button id="pause" class="quiet" aria-label="Pause animation">Pause</button><button id="next" class="quiet" aria-label="Next sequence">Next ↗</button></div>
   </div>
   <button id="settings" class="quiet" aria-expanded="false" aria-controls="panel">Controls</button>
@@ -265,13 +247,23 @@ const ClockCore = (() => {
     if(!definition) throw new Error('Unknown pattern: '+id);
     return cells.map(definition.angles);
   }
-  // Organizing passages use one straight axis across the complete matrix.
-  // Keep this restricted vocabulary independent of the manual display catalog.
+  // Each clock crosses the same straight axis; spatial delays turn that crossing
+  // into a travelling formation. Keep it independent of manual display patterns.
   const formations = [
     {label:'Horizontal',angle:0},
     {label:'Vertical',angle:PI/2},
     {label:'Falling diagonal',angle:PI/4},
     {label:'Rising diagonal',angle:-PI/4}
+  ];
+  const innerRadius=Math.min(...cells.map(c=>c.r)),outerRadius=Math.max(...cells.map(c=>c.r));
+  const radialPhase=c=>(c.r-innerRadius)/(outerRadius-innerRadius);
+  const sweeps = [
+    {id:'top-to-bottom',phase:c=>c.row/(ROWS-1)},
+    {id:'bottom-to-top',phase:c=>1-c.row/(ROWS-1)},
+    {id:'left-to-right',phase:c=>c.col/(COLS-1)},
+    {id:'right-to-left',phase:c=>1-c.col/(COLS-1)},
+    {id:'center-out',phase:radialPhase},
+    {id:'edges-in',phase:c=>1-radialPhase(c)}
   ];
   function destination(start,target,direction=0,turns=0) {
     let delta=wrap(target-start);
@@ -280,7 +272,7 @@ const ClockCore = (() => {
     return start+delta+(direction||Math.sign(delta)||1)*turns*TAU;
   }
   // Limits use artistic seconds; rates above 1 explicitly accelerate playback for debugging.
-  const MOTION = Object.freeze({maxSpeed:PI/6,maxAcceleration:PI/12,fieldTempo:.55,flowSeconds:24});
+  const MOTION = Object.freeze({maxSpeed:PI/6,maxAcceleration:PI/12,fieldTempo:.55,flowSeconds:24,sweepSeconds:6});
 
   // A subdivided Bernstein hull bounds the whole polynomial, not just sampled frames.
   function hullBound(points,depth=3) {
@@ -368,9 +360,9 @@ const ClockCore = (() => {
     // With zero acceleration at the middle connector's endpoints, extending it
     // reduces travel demand without magnifying inherited endpoint acceleration.
     bridge(targets,duration=6,options={}) {
-      const {direction=()=>0,turns=0,swap=false}=options,plans=[];
+      const {direction=()=>0,turns=0,swap=false,delay=()=>0}=options,plans=[];
       for(const c of cells) {
-        const h=2*c.i,src=[this.states[h],this.states[h+1]];
+        const h=2*c.i,src=[this.states[h],this.states[h+1]],wait=delay(c);
         const route=pair=>pair.map((s,j)=>[destination(src[j][0],s[0],direction(c,j),turns),s[1],s[2]]);
         let to=route([targets[h],targets[h+1]]);
         if(swap) {
@@ -384,16 +376,21 @@ const ClockCore = (() => {
             if(!s.every(Number.isFinite)||Math.abs(s[1])>MOTION.maxSpeed+1e-7||Math.abs(s[2])>MOTION.maxAcceleration+1e-7) throw new Error('Transition endpoint exceeds motion limits.');
           }
           const head=rampDuration(from[1],from[2]),tail=rampDuration(goal[1],-goal[2]);
-          const a=head?[from[0]+from[1]*head+from[2]*head*head/3,from[1]+from[2]*head/2,0]:from;
+          const settled=head?[from[0]+from[1]*head+from[2]*head*head/3,from[1]+from[2]*head/2,0]:from;
+          const a=[settled[0]+settled[1]*wait,settled[1],settled[2]];
           const b=tail?[goal[0]-goal[1]*tail+goal[2]*tail*tail/3,goal[1]-goal[2]*tail/2,0]:goal;
-          plans.push({from,goal,head,tail,a,b,free:!turns&&!direction(c,j)});
+          plans.push({from,goal,head,tail,settled,a,b,wait,free:!turns&&!direction(c,j)});
         }
       }
+      // Delays never shorten travel. Resting typography waits; interrupted motion
+      // keeps its velocity. Early arrivals coast so every track still ends together.
+      const spread=Math.max(...plans.map(p=>p.wait));
+      if(spread&&targets.some(s=>s[2]!==0)) throw new Error('Staggered arrivals require zero target acceleration.');
       let T=Math.max(duration,2,...plans.map(p=>p.head+p.tail+1)),middle;
       for(let attempt=0;attempt<100;attempt++) {
         const fits=s=>s.withinLimits();
         middle=plans.map(p=>{
-          const make=shift=>new Segment(this.duration+p.head,T-p.head-p.tail,p.a,[p.b[0]+shift,p.b[1],p.b[2]]);
+          const make=shift=>new Segment(this.duration+p.head+p.wait,T-p.head-p.tail,p.a,[p.b[0]+shift,p.b[1],p.b[2]]);
           const direct=make(0);
           if(fits(direct)||!p.free) return direct;
           // A moving hand may reach an equivalent angle sooner by continuing its
@@ -406,23 +403,27 @@ const ClockCore = (() => {
         T*=1.12;
       }
       plans.forEach((p,h)=>{
-        if(p.head) this.add(h,this.duration,p.head,p.a,accelerationCoefficients(p.from,p.a,p.head));
+        if(p.head) this.add(h,this.duration,p.head,p.settled,accelerationCoefficients(p.from,p.settled,p.head));
+        if(p.wait) this.add(h,this.duration+p.head,p.wait,p.a);
         const end=middle[h].to,goal=[p.goal[0]+end[0]-p.b[0],p.goal[1],p.goal[2]];
         this.tracks[h].push(middle[h]);this.states[h]=end.slice();
-        if(p.tail) this.add(h,this.duration+T-p.tail,p.tail,goal,accelerationCoefficients(end,goal,p.tail));
+        if(p.tail) this.add(h,this.duration+p.wait+T-p.tail,p.tail,goal,accelerationCoefficients(end,goal,p.tail));
+        const coast=spread-p.wait,s=this.states[h];
+        if(coast) this.add(h,this.duration+p.wait+T,coast,[s[0]+s[1]*coast,s[1],0]);
       });
-      this.duration+=T;return this;
+      this.duration+=T+spread;return this;
     }
     pose(pose,duration=6,options={}) {
       return this.bridge(pose.flat().map(p=>[p,0,0]),duration,{swap:true,...options});
     }
-    // A formation is a moving waypoint: every hand crosses it at nonzero speed.
-    // Its outgoing segment starts immediately from the same p/v/a, with no hold.
-    passage(index) {
+    // Each cell crosses the moving waypoint at mark.at + its spatial delay.
+    // Earlier cells continue rotating while the wave reaches the rest of the grid.
+    passage(index,sweep=null) {
       const formation=mod(index,formations.length),definition=formations[formation];
       const direction=Math.sign(this.states.reduce((sum,s)=>sum+s[1],0))||1;
-      this.bridge(cells.flatMap(()=>line(definition.angle).map(p=>[p,direction*.14,0])));
-      this.marks.push({at:this.duration,label:definition.label,formation});
+      const delay=c=>sweep===null?0:sweeps[sweep].phase(c)*MOTION.sweepSeconds;
+      this.bridge(cells.flatMap(()=>line(definition.angle).map(p=>[p,direction*.14,0])),6,{delay});
+      this.marks.push({at:this.duration-(sweep===null?0:MOTION.sweepSeconds),label:definition.label,formation,sweep});
       return this;
     }
     field(fn,duration=MOTION.flowSeconds,bridge=6) {
@@ -577,9 +578,9 @@ const ClockCore = (() => {
       field:(c,t,j)=>-3*PI/4+(j===0?1:-1)*(.74*travellingTurn(t+1-c.col*.3))}
   ];
   const repertoire = references.concat(studies);
-  function buildPerformance(states,index,flowSeconds=MOTION.flowSeconds,formation=null) {
+  function buildPerformance(states,index,flowSeconds=MOTION.flowSeconds,formation=null,sweep=null) {
     const score=new Score(states).mark('Transition');
-    if(formation!==null) score.passage(formation);
+    if(formation!==null) score.passage(formation,sweep);
     score.field(repertoire[index].field,flowSeconds);
     score.marks.push({at:score.duration-flowSeconds,label:'Flow'});
     return score;
@@ -591,6 +592,7 @@ const ClockCore = (() => {
     constructor(now=Date.now(),mode='exhibition',random=Math.random) {
       this.mode=mode;this.index=0;this.hour12=false;this.speed=1;this.rate=1;this.ramp=null;
       this.kind='text';this.random=random;this.formationIndex=Math.floor(random()*formations.length);
+      this.sweepIndex=Math.floor(random()*sweeps.length);
       this.paused=false;this.lastCycle=-1;this.deadline=0;this.targetTime='';this.label='Local time';
       this.states=textPose(timeText(new Date(now)),true).flat().map(p=>[p,0,0]);
       this.play(new Score(this.states).hold(3),'opening');
@@ -599,17 +601,18 @@ const ClockCore = (() => {
     get timed() {return this.mode==='active'||this.mode==='original';}
     // Only departure from typography needs a formation; typography orders the return.
     needsPassage(kind) {return this.kind==='text'&&kind==='pattern';}
-    // Cache the next random formation through planning retries. A committed
-    // departure draws a different successor; direct routes do not consume it.
+    // Cache formation and sweep through planning retries. Only a committed
+    // departure redraws them; formation axes exclude immediate repeats.
     play(score,phase,kind=this.kind) {
       if(this.needsPassage(kind)) {
         this.formationIndex=mod(this.formationIndex+1+Math.floor(this.random()*(formations.length-1)),formations.length);
+        this.sweepIndex=Math.floor(this.random()*sweeps.length);
       }
       this.kind=kind;this.score=score;this.elapsed=0;this.phase=phase;
     }
     sceneScore(kind) {
       const score=new Score(this.states);
-      return this.needsPassage(kind)?score.passage(this.formationIndex):score;
+      return this.needsPassage(kind)?score.passage(this.formationIndex,this.sweepIndex):score;
     }
     currentText(now) {return timeText(new Date(now),this.hour12);}
     changeRate(target) {
@@ -632,7 +635,7 @@ const ClockCore = (() => {
     start(now) {
       this.label=repertoire[this.index].label;this.deadline=0;
       const formation=this.needsPassage('pattern')?this.formationIndex:null;
-      this.play(buildPerformance(this.states,this.index,MOTION.flowSeconds,formation),'performance','pattern');
+      this.play(buildPerformance(this.states,this.index,MOTION.flowSeconds,formation,this.sweepIndex),'performance','pattern');
     }
     nextIndex() {
       const start=this.index<references.length?0:references.length;
@@ -682,7 +685,7 @@ const ClockCore = (() => {
       this.lastCycle=minute;this.index=this.mode==='original'?0:mod(minute,references.length);
       const target=this.currentText(deadline);let selected=null;
       for(let flow=MOTION.flowSeconds;flow>=2;flow-=2) {
-        const score=buildPerformance(this.states,this.index,flow,this.formationIndex)
+        const score=buildPerformance(this.states,this.index,flow,this.formationIndex,this.sweepIndex)
           .mark('Returning to time').pose(textPose(target,true));
         if(score.duration>available) continue;
         selected=score;break;
@@ -698,6 +701,17 @@ const ClockCore = (() => {
       if(this.phase==='manual') return;
       if(this.timed||this.phase==='clock'||this.phase==='minute') this.showTime(now);
       else if(this.phase==='holding'||this.phase==='return') this.returnTime(now,6,this.phase==='holding'||this.thenNext);
+    }
+    get playbackStopped() {
+      return this.phase==='manual'||(this.mode==='exhibition'&&
+        (this.phase==='clock'||this.phase==='minute'||(this.phase==='return'&&!this.thenNext)));
+    }
+    togglePlayback(now) {
+      // Explicit playback can leave a manual display; background resumption must
+      // keep that display intact. Paused choreography resumes its existing score.
+      if(this.playbackStopped) {this.paused=false;this.select(this.index,now);return;}
+      this.paused=!this.paused;
+      if(!this.paused) this.resume(now);
     }
     previewDelta(dt) {
       if(!this.ramp) return dt*this.rate;
@@ -754,7 +768,7 @@ const ClockCore = (() => {
       }
     }
   }
-  return {TAU,PI,COLS,ROWS,COUNT,PARK,cells,tiles,glyphs,wrap,mod,clamp,textPose,timeText,pattern,patterns,formations,destination,MOTION,Segment,Score,repertoire,references,studies,buildPerformance,Director};
+  return {TAU,PI,COLS,ROWS,COUNT,PARK,cells,tiles,glyphs,wrap,mod,clamp,textPose,timeText,pattern,patterns,formations,sweeps,destination,MOTION,Segment,Score,repertoire,references,studies,buildPerformance,Director};
 })();
 
 /* Canvas is a projection only. Director is also executable in Node for numerical
@@ -762,8 +776,7 @@ const ClockCore = (() => {
 (() => {
   const C=ClockCore,$=id=>document.getElementById(id),canvas=$('clock'),ctx=canvas.getContext('2d');
   const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const params=new URLSearchParams(location.search),studying=params.get('study')==='1';
-  if(studying) document.body.classList.add('study');
+  const params=new URLSearchParams(location.search);
   const player=new C.Director(Date.now(),reduced?'minimal':'exhibition');
   let lastStamp=null,hidden=document.hidden,cssWidth=0,cssHeight=0,unit=0,dpr=0,lastUi=0,lastPiece=-1;
   function resize() {
@@ -805,58 +818,53 @@ const ClockCore = (() => {
     $('sceneName').textContent=performing?C.repertoire[p.index].label:p.phase==='return'?'Returning to time':p.label;
     const reference=p.index<C.references.length,count=reference?C.references.length:C.studies.length;
     $('sequenceNumber').textContent=performing?String(p.index+1-(reference?0:C.references.length)).padStart(2,'0')+' / '+count:String(C.COUNT);
-    $('progress').style.transform='scaleX('+Math.min(p.elapsed/p.score.duration,1)+')';
+    const start=p.score.marks.find(m=>m.label==='Flow')?.at;
+    const seconds=p.phase==='performance'&&start!==undefined?C.clamp(p.elapsed-start,0,C.MOTION.flowSeconds):0;
+    $('progress').value=String(seconds);
+    $('progress').style.setProperty('--progress',100*seconds/C.MOTION.flowSeconds+'%');
+    $('progress').disabled=p.timed||p.phase==='manual';
+    $('progress').title=p.timed?'This mode follows real minutes':p.phase==='manual'?'Static display':seconds.toFixed(1)+' / 24 s · Drag to pause and inspect';
     $('mode').value=p.mode;$('choreography').value=String(p.index);
     $('speed').disabled=p.timed;$('speed').value=String(p.timed?1:p.speed);$('speedValue').textContent=(p.timed?1:p.speed)+'×'+(!p.timed&&p.speed>1?' · Debug':'');
     $('speed').title=p.timed?'This mode follows real minutes':'Playback speed';
-    $('pause').textContent=p.paused?'Resume':'Pause';
-    $('pause').setAttribute('aria-label',p.paused?'Resume animation':'Pause animation');
+    $('pause').textContent=p.playbackStopped?'Play':p.paused?'Resume':'Pause';
+    $('pause').setAttribute('aria-label',p.playbackStopped?'Play animation':p.paused?'Resume animation':'Pause animation');
     canvas.setAttribute('aria-label',['clock','holding','opening','minute'].includes(p.phase)?'Clock '+p.currentText(Date.now()).replace(/(..)(..)/,'$1:$2'):C.COUNT+' two-hand clocks: '+$('sceneName').textContent);
     canvas.dataset.phase=p.phase;
     const piece=C.repertoire[p.index];
-    $('studyEntry').href='?study=1&piece='+piece.id;
-    if(studying) {
-      const manual=p.phase==='manual',key=manual?p.label:p.index;
-      if(lastPiece!==key) {
-        lastPiece=key;
-        const display=manual?C.patterns.find(pattern=>pattern.label===p.label):piece;
-        $('studySelect').value=manual?'':String(p.index);
-        $('studyTitle').textContent=manual?p.label:piece.label;
-        $('studyKind').textContent=manual?(p.kind==='text'?"Static text":"Static pattern"):(piece.evidence||"Selected independent study");
-        $('studyRule').textContent=display?.rule||"This display stays still after its entrance. Choose a sequence to continue the animation.";
-        $('studyDetail').textContent=display?.detail||"This manual display is excluded from automatic playback.";
-        $('studyMotion').hidden=manual;
-        $('studyReference').hidden=manual||!piece.image;
-        $('studyNote').textContent=!manual&&reference
-          ?"Names are descriptive labels created for this project. Photographs establish composition; partial footage cannot establish a full timeline. The slider follows the reconstructed sequence, not the source timecode."
-          :"An independent pattern designed for this project.";
-        if(!manual&&piece.image) {
-          showReferenceImage(piece,piece.cues[0][2]||piece.image);
-          $('referenceLink').textContent=piece.source+' ↗';$('referenceLink').href=piece.url;
-        }
-        $('studyCues').replaceChildren();
-        for(const [label,seconds,file] of manual?[]:piece.cues) {
-          const button=document.createElement('button');button.textContent=label;
-          button.addEventListener('click',()=>{
-            act(()=>player.inspectFlow(seconds));
-            if(piece.image) showReferenceImage(piece,file||piece.image);
-          });
-          $('studyCues').append(button);
-        }
+    const manual=p.phase==='manual',key=manual?p.label:p.index;
+    if(lastPiece!==key) {
+      lastPiece=key;
+      const display=manual?C.patterns.find(pattern=>pattern.label===p.label):piece;
+      $('studyKind').textContent=manual?(p.kind==='text'?"Static text":"Static pattern"):(piece.evidence||"Selected independent study");
+      $('studyRule').textContent=display?.rule||"This display stays still after its entrance. Choose a sequence to continue the animation.";
+      $('studyDetail').textContent=display?.detail||"This manual display is excluded from automatic playback.";
+      $('studyReference').hidden=manual||!piece.image;
+      $('studyNote').textContent=!manual&&reference
+        ?"Names are descriptive labels created for this project. Photographs establish composition; partial footage cannot establish a full timeline. The slider follows the reconstructed sequence, not the source timecode."
+        :"An independent pattern designed for this project.";
+      if(!manual&&piece.image) {
+        showReferenceImage(piece,piece.cues[0][2]||piece.image);
+        $('referenceLink').textContent=piece.source+' ↗';$('referenceLink').href=piece.url;
       }
-      const start=p.score.marks.find(m=>m.label==='Flow')?.at;
-      const seconds=p.phase==='performance'&&start!==undefined?C.clamp(p.elapsed-start,0,C.MOTION.flowSeconds):0;
-      $('studySeek').value=String(seconds);$('studySeconds').textContent=seconds.toFixed(1)+' / 24 s';
+      $('studyCues').replaceChildren();
+      for(const [label,seconds,file] of manual?[]:piece.cues) {
+        const button=document.createElement('button');button.textContent=label;
+        button.addEventListener('click',()=>{
+          act(()=>player.inspectFlow(seconds));
+          if(piece.image) showReferenceImage(piece,file||piece.image);
+        });
+        $('studyCues').append(button);
+      }
     }
   }
   function act(action) {
     const index=player.index;action();
-    if(studying&&player.paused&&player.index!==index&&player.phase==='performance') player.inspectFlow(0);
+    if(player.paused&&player.index!==index&&player.phase==='performance') player.inspectFlow(0);
     updateUi();
   }
   function playPause() {
-    player.paused=!player.paused;lastStamp=null;
-    if(!player.paused) player.resume(Date.now());updateUi();
+    player.togglePlayback(Date.now());lastStamp=null;updateUi();
   }
   function frame(stamp) {
     if(lastStamp!==null&&!hidden) player.tick((stamp-lastStamp)/1000,Date.now());
@@ -866,7 +874,8 @@ const ClockCore = (() => {
     if(stamp-lastUi>125) {lastUi=stamp;updateUi();}
     requestAnimationFrame(frame);
   }
-  for(const id of ['choreography','studySelect']) {
+  {
+    const id='choreography';
     let group;
     C.repertoire.forEach((piece,i)=>{
       if(i===0||i===C.references.length) {
@@ -904,16 +913,14 @@ const ClockCore = (() => {
   $('closeControls').addEventListener('click',()=>closePanels(true));
   $('closeAbout').addEventListener('click',()=>closePanels(true));
   document.addEventListener('pointerdown',e=>{
+    if($('toolbar').contains(e.target)) return;
     for(const [id,button] of Object.entries(panelButtons)) {
       if(!$(id).hidden&&!$(id).contains(e.target)&&!$(button).contains(e.target)) closePanels();
     }
   });
   $('mode').addEventListener('change',e=>act(()=>player.setMode(e.target.value,Date.now())));
   $('choreography').addEventListener('change',e=>act(()=>player.select(Number(e.target.value),Date.now())));
-  $('studySelect').addEventListener('change',e=>act(()=>{
-    player.select(Number(e.target.value),Date.now());player.inspectFlow(0);
-  }));
-  $('studySeek').addEventListener('input',e=>act(()=>player.inspectFlow(Number(e.target.value))));
+  $('progress').addEventListener('input',e=>act(()=>player.inspectFlow(Number(e.target.value))));
   $('speed').addEventListener('input',e=>act(()=>player.setSpeed(Number(e.target.value),Date.now())));
   $('format').addEventListener('change',e=>act(()=>{player.hour12=e.target.value==='12';player.showTime(Date.now());}));
   $('timeButton').addEventListener('click',()=>act(()=>player.showTime(Date.now())));
@@ -947,13 +954,15 @@ const ClockCore = (() => {
     if(key==='t') act(()=>player.showTime(Date.now()));
   });
   document.addEventListener('visibilitychange',()=>{hidden=document.hidden;lastStamp=null;if(!hidden&&!player.paused) player.resume(Date.now());});
-  window.addEventListener('resize',resize);
-  if(studying) {
+  new ResizeObserver(resize).observe(canvas.parentElement);
+  if(params.get('study')==='1') {
     const requested=C.repertoire.findIndex(p=>p.id===params.get('piece'));
     player.select(Math.max(0,requested),Date.now());
     const seconds=Number(params.get('at')||0);
     player.inspectFlow(Number.isFinite(seconds)?seconds:0);
     $('toolbar').hidden=false;
+    $('studyDetails').open=true;
+    togglePanel('panel');
   }
   resize();updateUi();requestAnimationFrame(frame);
 })();

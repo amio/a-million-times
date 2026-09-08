@@ -71,7 +71,7 @@ Checkerboard uses a 9 × 4 board of tiles, each formed by four clocks with quart
 
 The default is continuous Exhibition mode. Each sequence returns to local time, holds it for six seconds at 1×, and begins the next sequence. Playback speed also scales that hold.
 
-Controls and playback information are hidden debugging tools with no visible entry on load. Press **⌘K** or **Ctrl+K**, or double-click the canvas, to reveal them. Playback information and Time / Pause / Next are grouped at the bottom left. The bottom-right Controls button opens the settings panel. About stays available at the top right with a brief introduction and a [View source link](https://github.com/amio/a-million-times).
+Controls and playback information are hidden debugging tools with no visible entry on load. Press **⌘K** or **Ctrl+K**, or double-click the canvas, to reveal them. Playback information and Time / Pause / Next are grouped at the bottom left. The bottom-right Controls button opens the settings panel, including choreography rules, cue poses, and expandable official references. The bottom progress bar supports dragging and keyboard seeking; inspection pauses playback, and Resume continues the same trajectory. Static displays and real-minute modes disable seeking. Existing study links open this panel at the requested paused pose. About stays available at the top right with a brief introduction and a [View source link](https://github.com/amio/a-million-times).
 
 | Control | Behavior |
 |---|---|

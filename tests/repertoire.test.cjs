@@ -100,3 +100,35 @@ test('scrubbing pauses the real score and resumes from its exact motion state',(
   p.showTime(now);p.inspectFlow(5,now);
   assert.equal(p.phase,'performance');assert.equal(p.mode,'exhibition');assert.equal(p.paused,true);
 });
+
+test('explicit Play leaves static patterns, text and time displays without losing the selected sequence',()=>{
+  for(const target of ['weave','text','time']) for(const paused of [false,true]) for(const settled of [false,true]) {
+    const p=new C.Director(now);p.select(3,now);p.inspectFlow(8,now);
+    if(target==='weave') p.showPose(C.pattern('weave'),'Weave');
+    else if(target==='text') p.showPose(C.textPose('TIME'),'TIME','text');
+    else p.showTime(now);
+    p.paused=false;
+    if(settled) p.tick(120,now+120000);
+    p.paused=paused;
+    assert.equal(p.playbackStopped,true);
+    if(target!=='time') {const score=p.score;p.resume(now);assert.equal(p.score,score,'Background resumption must preserve manual displays.');}
+    const before=p.states.map(s=>s.slice());
+    p.togglePlayback(now+120000);
+    assert.equal(p.paused,false);assert.equal(p.phase,'performance');assert.equal(p.index,3);
+    assert.equal(p.playbackStopped,false);assert.equal(p.mode,'exhibition');
+    p.score.sample(0).forEach((s,h)=>s.forEach((v,j)=>near(v,before[h][j])));
+    p.tick(.2,now+120200);assert.ok(p.elapsed>0);
+  }
+});
+
+test('Play after timeline inspection keeps the same score, including at the final cue',()=>{
+  for(const seconds of [0,8,24]) {
+    const p=new C.Director(now);p.select(3,now);p.inspectFlow(seconds,now);
+    const score=p.score,elapsed=p.elapsed;
+    assert.equal(p.playbackStopped,false);
+    p.togglePlayback(now);assert.equal(p.paused,false);assert.equal(p.score,score);near(p.elapsed,elapsed);
+    p.tick(.2,now+200);
+    if(seconds<24) {assert.equal(p.score,score);assert.ok(p.elapsed>elapsed);}
+    else {assert.equal(p.phase,'return');assert.equal(p.thenNext,true);}
+  }
+});
